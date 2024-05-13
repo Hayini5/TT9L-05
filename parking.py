@@ -4,7 +4,7 @@ from tkinter import messagebox
 
 root = tk.Tk()
 root.title('LOGIN')
-root.geometry('925x500+300+200')
+root.geometry('625x295')
 
 # Load the image
 bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\parkinglot.png")
