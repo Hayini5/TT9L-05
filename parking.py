@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 root = tk.Tk()
-root.title('LOGIN')
+root.title('MMU')
 root.geometry('625x295')
 
 # Load the image
