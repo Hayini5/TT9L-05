@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 root = tk.Tk()
-root.title('PARKING RESERVATION SYSTEM IN MMU')
+root.title('MMU 2')
 root.geometry('626x295')
 
 # Load the image
