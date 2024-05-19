@@ -26,4 +26,8 @@ button.pack(side="right", padx=110)  # Place the button on the right side with s
 button = tk.Button(root, text="SIGN UP")
 button.pack(side="bottom", padx=10)  # Place the button on the bottom with some padding
 
+button = tk.Button(root, text="SIGN in")
+button.pack(side="bottom", padx=10)  # Place the button on the bottom with some padding
+
+
 root.mainloop() 
