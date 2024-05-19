@@ -1,10 +1,10 @@
-#from main branch
+#from main to karthighayini
 import tkinter as tk
 from tkinter import messagebox
 
 root = tk.Tk()
-root.title('PARKING RESERVATION SYSTEM IN MMU')
-root.geometry('626x295')
+root.title('MMU')
+root.geometry('625x295')
 
 # Load the image
 bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\parkinglot.png")
