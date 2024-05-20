@@ -22,11 +22,6 @@ button_info = {
     "pady": 10,
     "font": ('Times New Roman', 16)
 }
-
-def button_sign_up():
-    name = tk.Label("Sign Up", "Enter your name:")
-    username = tk.Label("Sign Up", "Enter your username:")
-    password = tk.Label("Sign Up", "Enter your password:")
  
 button_guard = tk.Button(root, text="GUARD", **button_info)
 button_guard.pack(side="left", padx=150, pady=20)  
