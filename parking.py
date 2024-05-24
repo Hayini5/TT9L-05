@@ -1,9 +1,17 @@
+<<<<<<< HEAD
+=======
+#from main to karthighayini
+>>>>>>> main
 import tkinter as tk
 from tkinter import messagebox
 
 root = tk.Tk()
 root.title('LOGIN')
+<<<<<<< HEAD
 root.geometry(f'1195x733')
+=======
+root.geometry('625x295')
+>>>>>>> main
 
 bg_image = tk.PhotoImage(file=r"/Users/vikassni_1304/Downloads/parking pic.png")
 
