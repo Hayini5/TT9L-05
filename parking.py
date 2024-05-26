@@ -84,4 +84,7 @@ button_sign_up_main = tk.Button(root, text="SIGN UP", command=button_sign_up, **
 button_sign_up_main.pack(side="bottom", pady=135)
 
 # Start the Tkinter event loop
+
 root.mainloop()
+
+
