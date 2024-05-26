@@ -1,34 +1,149 @@
 import tkinter as tk
 from tkinter import messagebox
-#from main branch
-import tkinter as tk
-from tkinter import messagebox
 
+# Main application window
 root = tk.Tk()
-root.title('PARKING RESERVATION SYSTEM IN MMU')
-root.geometry('626x295')
+root.title('LOGIN')
+root.geometry('900x900')
 
 # Load the image
-bg_image = tk.PhotoImage(file=r"C:\Users\R. Prashanthy Pathy\Downloads")
-# Keep a reference to the image to prevent garbage collection
-root.bg_image = bg_image
+bg_image = tk.PhotoImage(file=r"C:\Users\R. Prashanthy Pathy\Pictures\road-highway.png")
+root.bg_image = bg_image  # keep a reference to avoid garbage collection
 
-# Create a label to display the background image
+# Background label
 bg_label = tk.Label(root, image=bg_image)
 bg_label.place(relwidth=1, relheight=1)
- 
-# Create a button to trigger the function
-button = tk.Button(root, text="GUARD")
-button.pack(side="left", padx=110)  # Place the button on the left side with some padding
 
-button = tk.Button(root, text="STUDENT")
-button.pack(side="right", padx=110)  # Place the button on the right side with some padding
+# Welcome message
+welcome_message = tk.Label(root, text="Welcome to Parking Reservation System of MMU!", font=("Algerian", 36), fg='green', bg=root.cget('bg'))
+welcome_message.pack(pady=40)
 
-button = tk.Button(root, text="SIGN UP")
-button.pack(side="bottom", padx=10)  # Place the button on the bottom with some padding
+# Button styles
+button_info = {
+    "width": 20,
+    "height": 2,
+    "padx": 10,
+    "pady": 10,
+    "font": ('Times New Roman', 18)
+}
 
-button = tk.Button(root, text="SIGN in")
-button.pack(side="bottom", padx=10)  # Place the button on the bottom with some padding
+# Function to handle the sign-up process
+def button_sign_up():
+    # Create a new top-level window for sign up form
+    signup_window = tk.Toplevel(root)
+    signup_window.title("SIGN UP FORM")
+
+    # Name Label and Entry
+    label_name = tk.Label(signup_window, text="Name")
+    label_name.grid(row=0, column=0, padx=10, pady=5)
+
+    entry_name = tk.Entry(signup_window)
+    entry_name.grid(row=0, column=1, padx=10, pady=5)
+
+    # Username Label and Entry
+    label_username = tk.Label(signup_window, text="Username")
+    label_username.grid(row=1, column=0, padx=10, pady=5)
+
+    entry_username = tk.Entry(signup_window)
+    entry_username.grid(row=1, column=1, padx=10, pady=5) 
+
+    # Password Label and Entry
+    label_password = tk.Label(signup_window, text="Password")
+    label_password.grid(row=2, column=0, padx=10, pady=5)
+
+    entry_password = tk.Entry(signup_window, show="*")
+    entry_password.grid(row=2, column=1, padx=10, pady=5)
+
+    # Function to handle submission
+    def submit():
+        name = entry_name.get()
+        username = entry_username.get()
+        password = entry_password.get()
+
+        if not name or not username or not password:
+            messagebox.showwarning("Input Error", "All fields are required.")
+        else:
+            # You can add code here to handle the sign-up process (e.g., save details to a database)
+            messagebox.showinfo("Sign Up", f"Name: {name}\nUsername: {username}\nPassword: {password}")
+            signup_window.destroy()
+
+    # Submit Button
+    button_submit = tk.Button(signup_window, text="Submit", command=submit)
+    button_submit.grid(row=3, columnspan=2, pady=10)
+
+# Function to handle the guard login process
+def button_guard():
+    # Create a new top-level window for guard login form
+    guard_login_window = tk.Toplevel(root)
+    guard_login_window.title("GUARD LOGIN")
+
+    # Username Label and Entry
+    label_username = tk.Label(guard_login_window, text="Username")
+    label_username.grid(row=0, column=0, padx=10, pady=5)
+
+    entry_username = tk.Entry(guard_login_window)
+    entry_username.grid(row=0, column=1, padx=10, pady=5)
+
+    # Password Label and Entry
+    label_password = tk.Label(guard_login_window, text="Password")
+    label_password.grid(row=1, column=0, padx=10, pady=5)
+
+    entry_password = tk.Entry(guard_login_window, show="*")
+    entry_password.grid(row=1, column=1, padx=10, pady=5)
+
+    # Function to handle login submission
+    def login():
+        username = entry_username.get()
+        password = entry_password.get()
+
+        if not username or not password:
+            messagebox.showwarning("Input Error", "Both fields are required.")
+        else:
+            # Add code here to handle the login process (e.g., verify credentials)
+            messagebox.showinfo("Login", f"Username: {username}\nPassword: {password}") 
+            guard_login_window.destroy()
+            open_faculty_selection()
+
+    # Login Button
+    button_login = tk.Button(guard_login_window, text="Login", command=login)
+    button_login.grid(row=2, columnspan=2, pady=10)
+
+# Function to open the faculty selection window
+def open_faculty_selection():
+    faculty_window = tk.Toplevel(root)
+    faculty_window.title("Faculty Selection")
+
+    label = tk.Label(faculty_window, text="Which faculty?", font=("Times New Roman", 24))
+    label.pack(pady=20)
+
+    # Example buttons for different faculties
+    button_faculty1 = tk.Button(faculty_window, text="FCI", font=("Times New Roman", 18))
+    button_faculty1.pack(pady=10)
+
+    button_faculty2 = tk.Button(faculty_window, text="FOM", font=("Times New Roman", 18))
+    button_faculty2.pack(pady=10)
+
+    button_faculty3 = tk.Button(faculty_window, text="FOE", font=("Times New Roman", 18))
+    button_faculty3.pack(pady=10)
+
+    button_faculty4 = tk.Button(faculty_window, text="FOB", font=("Times New Roman", 18))
+    button_faculty4.pack(pady=10)
+
+    button_faculty5 = tk.Button(faculty_window, text="DTC", font=("Times New Roman", 18))
+    button_faculty5.pack(pady=10)
 
 
-root.mainloop() 
+# GUARD Button
+button_guard_main = tk.Button(root, text="GUARD", command=button_guard, **button_info)
+button_guard_main.pack(side="left", padx=150, pady=20)
+
+# STUDENT Button
+button_student = tk.Button(root, text="STUDENT", **button_info)
+button_student.pack(side="right", padx=150, pady=20)
+
+# SIGN UP Button
+button_sign_up_main = tk.Button(root, text="SIGN UP", command=button_sign_up, **button_info)
+button_sign_up_main.pack(side="bottom", pady=135)
+
+# Start the Tkinter event loop
+root.mainloop()
