@@ -32,26 +32,36 @@ def button_sign_up():
     # Create a new top-level window for sign up form
     signup_window = tk.Toplevel(root)
     signup_window.title("SIGN UP FORM")
+    signup_window.geometry('900x900')
 
-    # Name Label and Entry
-    label_name = tk.Label(signup_window, text="Name")
+    signup_bg_image = tk.PhotoImage(file=r"/Users/vikassni_1304/Downloads/parking-deck-438415_1920.png")
+    signup_window.bg_image = signup_bg_image
+    signup_bg_label = tk.Label(signup_window, image=signup_bg_image)
+    signup_bg_label.place(relwidth=1, relheight=1)
+
+    signupform_frame = tk.Frame(signup_window, bg='black' , bd=10)
+    signupform_frame.place(relx=0.5, rely=0.5, anchor='center')
+
+
+     # Name Label and Entry
+    label_name = tk.Label(signupform_frame, text="Name", bg='black')
     label_name.grid(row=0, column=0, padx=10, pady=5)
 
-    entry_name = tk.Entry(signup_window)
+    entry_name = tk.Entry(signupform_frame)
     entry_name.grid(row=0, column=1, padx=10, pady=5)
 
     # Username Label and Entry
-    label_username = tk.Label(signup_window, text="Username")
+    label_username = tk.Label(signupform_frame, text="Username", bg='black')
     label_username.grid(row=1, column=0, padx=10, pady=5)
 
-    entry_username = tk.Entry(signup_window)
+    entry_username = tk.Entry(signupform_frame)
     entry_username.grid(row=1, column=1, padx=10, pady=5) 
 
     # Password Label and Entry
-    label_password = tk.Label(signup_window, text="Password")
+    label_password = tk.Label(signupform_frame, text="Password", bg='black')
     label_password.grid(row=2, column=0, padx=10, pady=5)
 
-    entry_password = tk.Entry(signup_window, show="*")
+    entry_password = tk.Entry(signupform_frame, show="*")
     entry_password.grid(row=2, column=1, padx=10, pady=5)
 
     # Function to handle submission
@@ -68,7 +78,7 @@ def button_sign_up():
             signup_window.destroy()
 
     # Submit Button
-    button_submit = tk.Button(signup_window, text="Submit", command=submit)
+    button_submit = tk.Button(signupform_frame, text="SIGN UP", command=submit)
     button_submit.grid(row=3, columnspan=2, pady=10)
 
 # GUARD Button
@@ -86,5 +96,3 @@ button_sign_up_main.pack(side="bottom", pady=135)
 # Start the Tkinter event loop
 
 root.mainloop()
-
-
