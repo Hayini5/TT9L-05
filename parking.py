@@ -7,6 +7,7 @@ root.title('LOGIN')
 root.geometry('900x900')
 
 # Load the image
+
 bg_image = tk.PhotoImage(file=r"C:\Users\R. Prashanthy Pathy\Pictures\road-highway.png")
 root.bg_image = bg_image  # keep a reference to avoid garbage collection
 
@@ -34,20 +35,25 @@ def button_sign_up():
     signup_window.title("SIGN UP FORM")
     signup_window.geometry('900x900')
 
+
     signup_bg_image = tk.PhotoImage(file=r"C:\Users\R. Prashanthy Pathy\Pictures\signup.png")
     signup_window.bg_image = signup_bg_image
     signup_bg_label = tk.Label(signup_window, image=signup_bg_image)
     signup_bg_label.place(relwidth=1, relheight=1)
 
-    signupform_frame = tk.Frame(signup_window, bg='black', bd=10)
-    signupform_frame.place(relx=0.5, rely=0.5, anchor='center')
 
-    # Name Label and Entry
+    signupform_frame = tk.Frame(signup_window, bg='black', bd=10)
+    signupform_frame.place(relx=0.5, rely=0.5, anchor='center'
+    
+
+
+     # Name Label and Entry
     label_name = tk.Label(signupform_frame, text="Name", bg='black', fg='white')
     label_name.grid(row=0, column=0, padx=10, pady=5)
 
     entry_name = tk.Entry(signupform_frame)
     entry_name.grid(row=0, column=1, padx=10, pady=5)
+    
 
     # Username Label and Entry
     label_username = tk.Label(signupform_frame, text="Username", bg='black', fg='white')
@@ -146,4 +152,52 @@ button_sign_up_main = tk.Button(root, text="SIGN UP", command=button_sign_up, **
 button_sign_up_main.pack(side="bottom", pady=135)
 
 # Start the Tkinter event loop
+
+
+    # Username Label and Entry
+    label_username = tk.Label(signupform_frame, text="Username", bg='black')
+    label_username.grid(row=1, column=0, padx=10, pady=5)
+
+    entry_username = tk.Entry(signupform_frame)
+    entry_username.grid(row=1, column=1, padx=10, pady=5) 
+
+    # Password Label and Entry
+    label_password = tk.Label(signupform_frame, text="Password", bg='black')
+    label_password.grid(row=2, column=0, padx=10, pady=5)
+
+    entry_password = tk.Entry(signupform_frame, show="*")
+    entry_password.grid(row=2, column=1, padx=10, pady=5)
+
+    # Function to handle submission
+    def submit():
+        name = entry_name.get()
+        username = entry_username.get()
+        password = entry_password.get()
+
+        if not name or not username or not password:
+            messagebox.showwarning("Input Error", "All fields are required.")
+        else:
+            # You can add code here to handle the sign-up process (e.g., save details to a database)
+            messagebox.showinfo("Sign Up", f"Name: {name}\nUsername: {username}\nPassword: {password}")
+            signup_window.destroy()
+
+    # Submit Button
+    button_submit = tk.Button(signupform_frame, text="SIGN UP", command=submit)
+    button_submit.grid(row=3, columnspan=2, pady=10)
+
+# GUARD Button
+button_guard = tk.Button(root, text="GUARD", **button_info)
+button_guard.pack(side="left", padx=150, pady=20)
+
+# STUDENT Button
+button_student = tk.Button(root, text="STUDENT", **button_info)
+button_student.pack(side="right", padx=150, pady=20)
+
+# SIGN UP Button
+button_sign_up_main = tk.Button(root, text="SIGN UP", command=button_sign_up, **button_info)
+button_sign_up_main.pack(side="bottom", pady=135)
+
+# Start the Tkinter event loop
+
+
 root.mainloop()
