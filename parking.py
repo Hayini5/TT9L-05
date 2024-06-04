@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import messagebox
 import sqlite3
 
-# Connect to SQLite database
 conn = sqlite3.connect('parking_system.db')
 
 # Create a cursor object
@@ -18,6 +17,7 @@ c.execute('''
     )
 ''')
 
+
 # Create a table for vehicles
 c.execute('''
     CREATE TABLE IF NOT EXISTS vehicles (
@@ -30,6 +30,8 @@ c.execute('''
         FOREIGN KEY (user_id) REFERENCES users (user_id)
     )
 ''')
+
+
 
 # Commit the changes and close the connection
 conn.commit()
@@ -72,7 +74,7 @@ def button_sign_up():
     signup_bg_label = tk.Label(signup_window, image=signup_bg_image)
     signup_bg_label.place(relwidth=1, relheight=1)
 
-    signupform_frame = tk.Frame(signup_window, bg='black' , bd=10)
+    signupform_frame = tk.Frame(signup_window, bg='black', bd=10)
     signupform_frame.place(relx=0.5, rely=0.5, anchor='center')
 
     # Name Label and Entry
@@ -177,6 +179,7 @@ def button_student():
             if user:
                 messagebox.showinfo("Login", "Login Successful!")
                 student_window.destroy()
+
                 vehicle_info_window(student_id)  # Call vehicle_info_window with user_id
                 choose_parking_space(student_id)  # Open choose parking space window after successful login
             else:
@@ -185,11 +188,14 @@ def button_student():
 
     # Forget Password Button
     button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red')
-    button_forget.grid(row=3, column=1, sticky="e", pady=5, padx=10)
 
-    # Submit Button
-    button_submit = tk.Button(loginform_frame, text="Submit", font=("Microsoft YaHei UI Light", 16), fg='black', command=submit)
-    button_submit.grid(row=4, columnspan=2, pady=10)
+            else:
+                messagebox.showerror("Error", "Invalid Student ID or Password")
+
+    # Forget Password Button
+    button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red', command=submit)
+
+    
 
 def vehicle_info_window(user_id):
     # Create a new top-level window for vehicle information
@@ -295,3 +301,6 @@ button_sign_up.pack(pady=20)
 
 # Main loop to run the Tkinter application
 root.mainloop()
+
+root.mainloop()
+
