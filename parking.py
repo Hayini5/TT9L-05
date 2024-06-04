@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import messagebox
 import sqlite3
 
-# Connect to SQLite database (it will create the database file if it doesn't exist)
 conn = sqlite3.connect('parking_system.db')
 
 # Create a cursor object
@@ -17,6 +16,22 @@ c.execute('''
         password TEXT NOT NULL
     )
 ''')
+
+
+# Create a table for vehicles
+c.execute('''
+    CREATE TABLE IF NOT EXISTS vehicles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        vehicle_type TEXT NOT NULL,
+        vehicle_number TEXT NOT NULL,
+        parking_space INTEGER NOT NULL,
+        faculty TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (user_id)
+    )
+''')
+
+
 
 # Commit the changes and close the connection
 conn.commit()
@@ -47,7 +62,6 @@ button_info = {
     "pady": 10,
     "font": ('Times New Roman', 18)
 }
-
 # Function to handle the sign-up process
 def button_sign_up():
     # Create a new top-level window for sign up form
@@ -165,62 +179,128 @@ def button_student():
             if user:
                 messagebox.showinfo("Login", "Login Successful!")
                 student_window.destroy()
+
+                vehicle_info_window(student_id)  # Call vehicle_info_window with user_id
+                choose_parking_space(student_id)  # Open choose parking space window after successful login
+            else:
+                messagebox.showerror("Error", "Invalid Student ID or Password")
+
+
+    # Forget Password Button
+    button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red')
+
             else:
                 messagebox.showerror("Error", "Invalid Student ID or Password")
 
     # Forget Password Button
     button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red', command=submit)
-    button_forget.grid(row=3, column=1, sticky="e", pady=5, padx=10)
+
+    
+
+def vehicle_info_window(user_id):
+    # Create a new top-level window for vehicle information
+    vehicle_window = tk.Toplevel(root)
+    vehicle_window.title("Vehicle Information")
+    vehicle_window.geometry('900x900')
+
+    vehicle_bg_image = tk.PhotoImage(file=r"/Users/vikassni_1304/Downloads/bluebackground.png")
+    vehicle_window.bg_image = vehicle_bg_image  # keep a reference to avoid garbage collection
+    vehicle_bg_label = tk.Label(vehicle_window, image=vehicle_bg_image)
+    vehicle_bg_label.place(relwidth=1, relheight=1)
+
+    vehicle_form_frame = tk.Frame(vehicle_window, bg='white', bd=10)
+    vehicle_form_frame.place(relx=0.5, rely=0.5, anchor='center')
+
+    # Vehicle Type Label and OptionMenu
+    label_vehicle_type = tk.Label(vehicle_form_frame, text="Vehicle Type", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
+    label_vehicle_type.grid(row=0, column=0, padx=10, pady=5)
+
+    vehicle_type = tk.StringVar(vehicle_form_frame)
+    vehicle_type.set("Car")  # default value
+    option_vehicle_type = tk.OptionMenu(vehicle_form_frame, vehicle_type, "Car", "Motor")
+    option_vehicle_type.grid(row=0, column=1, padx=10, pady=5)
+
+    # Vehicle Number Plate Label and Entry
+    label_vehicle_number = tk.Label(vehicle_form_frame, text="Vehicle Number Plate", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
+    label_vehicle_number.grid(row=1, column=0, padx=10, pady=5)
+
+    entry_vehicle_number = tk.Entry(vehicle_form_frame)
+    entry_vehicle_number.grid(row=1, column=1, padx=10, pady=5)
+
+    # Faculty Label and OptionMenu
+    label_faculty = tk.Label(vehicle_form_frame, text="Faculty", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
+    label_faculty.grid(row=2, column=0, padx=10, pady=5)
+
+    faculty = tk.StringVar(vehicle_form_frame)
+    faculty.set("FCI")  # default value
+    option_faculty = tk.OptionMenu(vehicle_form_frame, faculty, "FCI", "FOE", "Other")  # Add more faculties as needed
+    option_faculty.grid(row=2, column=1, padx=10, pady=5)
+
+    # Function to handle submission
+    def submit_vehicle_info():
+        v_type = vehicle_type.get()
+        v_number = entry_vehicle_number.get()
+        v_faculty = faculty.get()
+
+        if not v_number:
+            messagebox.showwarning("Input Error", "Vehicle Number Plate is required.")
+        else:
+            # Insert vehicle data into the SQLite database
+            conn = sqlite3.connect('parking_system.db')
+            c = conn.cursor()
+            c.execute('''
+                INSERT INTO vehicles (user_id, vehicle_type, vehicle_number, faculty) VALUES (?, ?, ?, ?)
+            ''', (user_id, v_type, v_number, v_faculty))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Vehicle Information", "Vehicle Information Submitted Successfully!")
+            vehicle_window.destroy()
 
     # Submit Button
-    button_submit = tk.Button(loginform_frame, text="Submit", font=("Microsoft YaHei UI Light", 16), fg='black', command=submit)
-    button_submit.grid(row=4, columnspan=2, pady=10)
+    button_submit_vehicle = tk.Button(vehicle_form_frame, text="Submit", font=("Microsoft YaHei UI Light", 16), fg='black', command=submit_vehicle_info)
+    button_submit_vehicle.grid(row=3, columnspan=2, pady=10)
 
-# Function to handle the guard login process
-def button_guard():
-    # Create a new top-level window for guard login form
-    guard_login_window = tk.Toplevel(root)
-    guard_login_window.title("GUARD LOGIN")
+# Function to let student choose parking space
 
-    # Guard_Id Label and Entry
-    label_guard_id = tk.Label(guard_login_window, text="Guard_Id")
-    label_guard_id.grid(row=0, column=0, padx=10, pady=5)
+# Function to let student choose parking space
+def choose_parking_space(user_id):
+    # Create a new top-level window for parking space selection
+    space_selection_window = tk.Toplevel(root)
+    space_selection_window.title('Choose Parking Space')
+    space_selection_window.geometry('1500x1500')
 
-    entry_guard_id = tk.Entry(guard_login_window)
-    entry_guard_id.grid(row=0, column=1, padx=10, pady=5)
+    # Create a frame to hold the parking layout
+    layout_frame = tk.Frame(space_selection_window, bg='white', bd=10)
+    layout_frame.place(relx=0.5, rely=0.5, relwidth=1, relheight=1, anchor='center')
 
-    # Password Label and Entry
-    label_password = tk.Label(guard_login_window, text="Password")
-    label_password.grid(row=1, column=0, padx=10, pady=5)
+    # Function to handle button clicks
+    def reserve_space(space):
+        messagebox.showinfo("Parking Space", f"Parking Space {space} reserved successfully!")
 
-    entry_password = tk.Entry(guard_login_window, show="*")
-    entry_password.grid(row=1, column=1, padx=10, pady=5)
+        # Here, you can add code to update the database with the selected parking space
+        # For example, you can insert a record into the vehicles table with the user_id and selected parking space
 
-    # Function to handle login submission
-    def login():
-        guard_id = entry_guard_id.get()
-        password = entry_password.get()
+    # Create buttons for each parking space
+    for i in range(1, 51):
+        button_text = f"Space {i}"
+        button = tk.Button(layout_frame, text=button_text, font=("Arial", 10), width=10, height=4,
+                           command=lambda i=i: reserve_space(i))
+        row = (i - 1) // 5
+        col = (i - 1) % 5
+        button.grid(row=row, column=col, padx=10, pady=10)
 
-        if not guard_id or not password:
-            messagebox.showwarning("Input Error", "Both fields are required.")
-        else:
-            # Add code here to handle the login process (e.g., verify credentials)
-            messagebox.showinfo("Login", f"guard_id: {guard_id}\nPassword: {password}")
-            guard_login_window.destroy()
-        
 
-    # Login Button
-    button_login = tk.Button(guard_login_window, text="LOGIN", command=login)
-    button_login.grid(row=2, columnspan=2, pady=10)
 
-# Buttons for Sign Up, Student Login, and Guard Login
-button_sign_up = tk.Button(root, text="SIGN UP", command=button_sign_up, **button_info)
-button_sign_up.pack(pady=20)
-
-button_student = tk.Button(root, text="STUDENT LOGIN", command=button_student, **button_info)
+# Create a button for student login
+button_student = tk.Button(root, text="STUDENT", width=20, height=2, font=('Times New Roman', 18), command=button_student)
 button_student.pack(pady=20)
 
-button_guard = tk.Button(root, text="GUARD LOGIN", command=button_guard, **button_info)
-button_guard.pack(pady=20)
+# Create buttons for each functionality
+button_sign_up = tk.Button(root, text="SIGN UP", **button_info, command=button_sign_up)
+button_sign_up.pack(pady=20)
+
+# Main loop to run the Tkinter application
+root.mainloop()
 
 root.mainloop()
+
