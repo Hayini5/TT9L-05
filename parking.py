@@ -189,14 +189,6 @@ def button_student():
     # Forget Password Button
     button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red')
 
-            else:
-                messagebox.showerror("Error", "Invalid Student ID or Password")
-
-    # Forget Password Button
-    button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red', command=submit)
-
-    
-
 def vehicle_info_window(user_id):
     # Create a new top-level window for vehicle information
     vehicle_window = tk.Toplevel(root)
