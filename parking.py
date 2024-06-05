@@ -291,6 +291,54 @@ button_student.pack(pady=20)
 button_sign_up = tk.Button(root, text="SIGN UP", **button_info, command=button_sign_up)
 button_sign_up.pack(pady=20)
 
+# Data for the user's record
+def get_vehicles():
+    conn = sqlite3.connect('parking_system.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM vehicles')
+    Vehicles = c.fetchall
+    conn.close()
+
+    return Vehicles
+
+# Update the parking data when a parking is reserved
+def update_parking(reserved_space):
+    conn = sqlite3.connect('parking_system.db')
+    c = conn.cursor()
+    c.execute('UPDATE vehicles SET parking_space = parking_space + ?',(reserved_space))
+    conn.commit()
+    conn.close()
+
+# Create a record for the user
+def record():
+    record = tk.Toplevel(root)
+    record.title("User's record")
+    record.geometry('600x300')
+
+    # Create a table
+    user_record = ttk.Treeview(record, height=5)
+
+    # Create columns for the table
+    user_record['columns'] = ('id', 'user_id', 'vehicle_type', 'vehicle_number', 'parking_space', 'faculty')
+
+    user_record.column('#0', width=0, stretch=tk.NO)
+    user_record.column('id', anchor=tk.CENTER, width=30)
+    user_record.column('user_id', anchor=tk.CENTER, width=100)
+    user_record.column('vehicle_type', anchor=tk.CENTER, width=100)
+    user_record.column('vehicle_number', anchor=tk.CENTER, width=100)
+    user_record.column('parking_space', anchor=tk.CENTER, width=100)
+    user_record.column('faculty', anchor=tk.CENTER, width=100)
+
+    # Headings for the table
+    user_record.heading('id', text='ID')
+    user_record.heading('user_id', text='User ID')
+    user_record.heading('vehicle_type', text='Vehicle Type')
+    user_record.heading('vehicle_number', text='Vehicle Number')
+    user_record.heading('parking_space', text='Parking Space')
+    user_record.heading('faculty', text='Faculty')
+
+    user_record.pack(fill=tk.BOTH, expand=True)
+
 # Main loop to run the Tkinter application
 root.mainloop()
 
