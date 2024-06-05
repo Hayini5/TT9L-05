@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import sqlite3
 
+# Connect to SQLite database
 conn = sqlite3.connect('parking_system.db')
 
 # Create a cursor object
@@ -17,7 +18,6 @@ c.execute('''
     )
 ''')
 
-
 # Create a table for vehicles
 c.execute('''
     CREATE TABLE IF NOT EXISTS vehicles (
@@ -30,8 +30,6 @@ c.execute('''
         FOREIGN KEY (user_id) REFERENCES users (user_id)
     )
 ''')
-
-
 
 # Commit the changes and close the connection
 conn.commit()
@@ -74,7 +72,7 @@ def button_sign_up():
     signup_bg_label = tk.Label(signup_window, image=signup_bg_image)
     signup_bg_label.place(relwidth=1, relheight=1)
 
-    signupform_frame = tk.Frame(signup_window, bg='black', bd=10)
+    signupform_frame = tk.Frame(signup_window, bg='black' , bd=10)
     signupform_frame.place(relx=0.5, rely=0.5, anchor='center')
 
     # Name Label and Entry
@@ -179,23 +177,18 @@ def button_student():
             if user:
                 messagebox.showinfo("Login", "Login Successful!")
                 student_window.destroy()
-
                 vehicle_info_window(student_id)  # Call vehicle_info_window with user_id
                 choose_parking_space(student_id)  # Open choose parking space window after successful login
             else:
                 messagebox.showerror("Error", "Invalid Student ID or Password")
 
-
     # Forget Password Button
     button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red')
+    button_forget.grid(row=3, column=1, sticky="e", pady=5, padx=10)
 
-            else:
-                messagebox.showerror("Error", "Invalid Student ID or Password")
-
-    # Forget Password Button
-    button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red', command=submit)
-
-    
+    # Submit Button
+    button_submit = tk.Button(loginform_frame, text="Submit", font=("Microsoft YaHei UI Light", 16), fg='black', command=submit)
+    button_submit.grid(row=4, columnspan=2, pady=10)
 
 def vehicle_info_window(user_id):
     # Create a new top-level window for vehicle information
@@ -261,17 +254,16 @@ def vehicle_info_window(user_id):
     button_submit_vehicle.grid(row=3, columnspan=2, pady=10)
 
 # Function to let student choose parking space
-
 # Function to let student choose parking space
 def choose_parking_space(user_id):
     # Create a new top-level window for parking space selection
     space_selection_window = tk.Toplevel(root)
     space_selection_window.title('Choose Parking Space')
-    space_selection_window.geometry('1500x1500')
+    space_selection_window.geometry('900x900')
 
     # Create a frame to hold the parking layout
     layout_frame = tk.Frame(space_selection_window, bg='white', bd=10)
-    layout_frame.place(relx=0.5, rely=0.5, relwidth=1, relheight=1, anchor='center')
+    layout_frame.place(relx=0.5, rely=0.5, anchor='center')
 
     # Function to handle button clicks
     def reserve_space(space):
@@ -283,11 +275,11 @@ def choose_parking_space(user_id):
     # Create buttons for each parking space
     for i in range(1, 51):
         button_text = f"Space {i}"
-        button = tk.Button(layout_frame, text=button_text, font=("Arial", 10), width=10, height=4,
+        button = tk.Button(layout_frame, text=button_text, font=("Arial", 10), width=10, height=2,
                            command=lambda i=i: reserve_space(i))
-        row = (i - 1) // 5
-        col = (i - 1) % 5
-        button.grid(row=row, column=col, padx=10, pady=10)
+        row = (i - 1) // 10
+        col = (i - 1) % 10
+        button.grid(row=row, column=col, padx=5, pady=5)
 
 
 
@@ -301,6 +293,3 @@ button_sign_up.pack(pady=20)
 
 # Main loop to run the Tkinter application
 root.mainloop()
-
-root.mainloop()
-
