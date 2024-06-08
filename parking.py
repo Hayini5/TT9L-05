@@ -43,7 +43,7 @@ root.title('LOGIN')
 root.geometry('900x900')
 
 # Load the image
-bg_image = tk.PhotoImage(file=r"/Users/vikassni_1304/Downloads/road-highway.png")
+bg_image = tk.PhotoImage(file=r"/Users/Dell/Pictures/road-highway.png")
 root.bg_image = bg_image  # keep a reference to avoid garbage collection
 
 # Background label
