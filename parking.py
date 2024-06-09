@@ -62,9 +62,37 @@ button_info = {
     "pady": 10,
     "font": ('Times New Roman', 18)
 }
-
 # Function to handle the sign-up process
 def button_sign_up():
+    # Create a new top-level window for sign up form
+    signup_window = tk.Toplevel(root)
+    signup_window.title("SIGN UP SELECTION")
+    signup_window.geometry('900x900')
+
+    signup_bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\WhatsApp-Image-2024-06-05-at-2.07.03-AM.png")
+    signup_window.bg_image = signup_bg_image
+    signup_bg_label = tk.Label(signup_window, image=signup_bg_image)
+    signup_bg_label.place(relwidth=1, relheight=1)
+
+    signupselection_frame = tk.Frame(signup_window, bg='black', bd=10)
+    signupselection_frame.place(relx=0.5, rely=0.4, anchor='center')  # Adjust the rely parameter to move the frame up
+
+    # Label and Entry
+    label = tk.Label(signupselection_frame, text="ARE YOU A STUDENT OR A GUARD TO SIGN UP?", fg='black', bg='white',font=("Times New Roman", 16))
+    label.grid(row=0,column=0,padx=10,pady=5)
+
+    # Create a new frame for the buttons
+    button_frame = tk.Frame(signup_window, bg='black', bd=10)
+    button_frame.place(relx=0.5, rely=0.6, anchor='center')  # Adjust the rely parameter to move the frame down
+
+    # Example buttons for different users
+    button_user1 = tk.Button(button_frame, text="STUDENT", font=("Times New Roman", 18), command=student_sign_up)
+    button_user1.grid(row=0, column=0, padx=10, pady=10)
+
+    button_user2 = tk.Button(button_frame, text="GUARD", font=("Times New Roman", 18), command=guard_sign_up)
+    button_user2.grid(row=0, column=1, padx=10, pady=10)
+
+def student_sign_up():
     # Create a new top-level window for sign up form
     signup_window = tk.Toplevel(root)
     signup_window.title("SIGN UP FORM")
@@ -166,6 +194,7 @@ def student_sign_up():
 
     # Function to handle submission
     def submit():
+        name = entry_name.get()
         name = entry_name.get()
         user_id = entry_id.get()
         password = entry_password.get()
