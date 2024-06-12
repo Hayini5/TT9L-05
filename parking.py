@@ -34,6 +34,15 @@ c.execute('''
     )
 ''')
 
+c.execute('''
+    CREATE TABLE IF NOT EXISTS reservation (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        parking_space TEXT NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL
+    )
+''')
+
 # Add the vehicle_type column to the student table
 try:
     c.execute('ALTER TABLE student ADD COLUMN vehicle_type TEXT')
@@ -543,6 +552,10 @@ def fci_layout():
         end_time = tk.StringVar(time_selection_window)
         end_time.set(times[0])  # default value
 
+        # Variable to store selected parking space
+        parking_space = tk.StringVar(time_selection_window)
+        parking_space.set(space)
+
         # Create OptionMenu for time selection
         start_time_menu = tk.OptionMenu(time_selection_window, start_time, *times)
         start_time_menu.grid(row=0, column=1, padx=10, pady=10)
@@ -552,11 +565,28 @@ def fci_layout():
 
         # Fuction to confirm reservation with selected time
         def confirm_reservation():
+            chosen_parking_space = parking_space.get()
             chosen_start_time = start_time.get()
             chosen_end_time = end_time.get()
-            messagebox.showinfo("Parking Space", f"Parking Space {space} reserved successfull from {chosen_start_time} to {chosen_end_time}!")
-            button_dict[space].config(bg='red') #change button colour to red
-            time_selection_window.destroy()
+
+            # Make a connection with the database
+            conn = get_db_connection()
+            c = conn.cursor()
+
+            # Insert parking into the database
+            try:
+                c.execute("INSERT INTO reservation (faculty, parking_space, start_time, end_time) VALUES ('FCI', ?, ?, ?)", 
+                              (chosen_parking_space, chosen_start_time, chosen_end_time))
+                conn.commit()
+                messagebox.showinfo("Parking Space", f"Parking Space {chosen_parking_space} reserved successfully from {chosen_start_time} to {chosen_end_time}!")
+                button_dict[space].config(bg='red') #change button colour to red
+                time_selection_window.destroy()
+
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+
+            finally:
+                conn.close() # Close the connection
 
         # Confirm button
         confirm_button = tk.Button(time_selection_window, text="RESERVED",bg='blue', font=("Microsoft YaHei UI Light", 10), fg='white', command=confirm_reservation)
@@ -611,6 +641,10 @@ def foe_layout():
         end_time = tk.StringVar(time_selection_window)
         end_time.set(times[0])  # default value
 
+        # Variable to store selected parking space
+        parking_space = tk.StringVar(time_selection_window)
+        parking_space.set(space)
+
         # Create OptionMenu for time selection
         start_time_menu = tk.OptionMenu(time_selection_window, start_time, *times)
         start_time_menu.grid(row=0, column=1, padx=10, pady=10)
@@ -620,11 +654,28 @@ def foe_layout():
 
         # Fuction to confirm reservation with selected time
         def confirm_reservation():
+            chosen_parking_space = parking_space.get()
             chosen_start_time = start_time.get()
             chosen_end_time = end_time.get()
-            messagebox.showinfo("Parking Space", f"Parking Space {space} reserved successfull from {chosen_start_time} to {chosen_end_time}!")
-            button_dict[space].config(bg='red') #change button colour to red
-            time_selection_window.destroy()
+
+            # Make a connection with the database
+            conn = get_db_connection()
+            c = conn.cursor()
+
+            # Insert parking into the database
+            try:
+                c.execute("INSERT INTO reservation (faculty, parking_space, start_time, end_time) VALUES ('FOE', ?, ?, ?)", 
+                              (chosen_parking_space, chosen_start_time, chosen_end_time))
+                conn.commit()
+                messagebox.showinfo("Parking Space", f"Parking Space {chosen_parking_space} reserved successfully from {chosen_start_time} to {chosen_end_time}!")
+                button_dict[space].config(bg='red') #change button colour to red
+                time_selection_window.destroy()
+
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+
+            finally:
+                conn.close() # Close the connection
 
         # Confirm button
         confirm_button = tk.Button(time_selection_window, text="RESERVED",bg='green', font=("Microsoft YaHei UI Light", 10), fg='white', command=confirm_reservation)
