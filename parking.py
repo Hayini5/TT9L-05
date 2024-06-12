@@ -191,10 +191,12 @@ def student_sign_up():
 
         if not name or not email or not password or not v_number or not v_type or not g_type:
             messagebox.showwarning("Input Error", "All fields are required.")
+            signup_window.destroy()
             return student_sign_up()
         elif not validate_mmu_email(email):
             messagebox.showwarning("Input Error", "Invalid email address.")
-            return
+            signup_window.destroy()
+            return student_sign_up()
         else:
             # Open a new connection for the submission
             conn = get_db_connection()
@@ -342,7 +344,8 @@ def guard_sign_up():
 
         if not name or not guard_id or not password or not g_type or not faculty:
             messagebox.showwarning("Input Error", "All fields are required.")
-            return
+            signup_window.destroy()
+            return guard_sign_up()
         else:
             # Insert user data into the SQLite database
             try:
@@ -417,7 +420,8 @@ def student_login():
 
         if not student_email or not password:
             messagebox.showwarning("Input Error", "All fields are required.")
-            return
+            student_window.destroy()
+            return student_login()
         else:
             conn = sqlite3.connect('parking_system.db')
             c = conn.cursor()
@@ -688,7 +692,8 @@ def guard_login():
         
         if not guard_id or not password:
             messagebox.showwarning("Input Error", "Both fields are required.")
-            return
+            guard_login_window.destroy()
+            return guard_login()
         else:
             # Verify user data from the SQLite database
             conn = sqlite3.connect('parking_system.db')
