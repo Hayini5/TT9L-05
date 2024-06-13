@@ -3,6 +3,37 @@ from tkinter import ttk, messagebox
 import sqlite3
 import re
 
+# Connect to SQLite database
+conn = sqlite3.connect('parking_system.db')
+
+# Create a cursor object
+c = conn.cursor()
+
+# Create a table for users
+c.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        user_id TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        vehicle_type TEXT,
+        vehicle_number TEXT,
+        gender_type TEXT NOT NULL,
+        faculty TEXT
+    )
+''')
+
+# Add the vehicle_type column to the users table
+try:
+    c.execute('ALTER TABLE users ADD COLUMN vehicle_type TEXT')
+    print("Column 'vehicle_type' added successfully.")
+except sqlite3.OperationalError as e:
+    print("Error:", e)
+
+# Commit the changes and close the connection
+conn.commit()
+conn.close()
+
 # Function to get a database connection
 def get_db_connection():
     return sqlite3.connect('parking_system.db')
@@ -172,6 +203,59 @@ def student_sign_up():
     # Submit Button
     button_submit = tk.Button(signupform_frame, text="SIGN UP", command=submit)
     button_submit.grid(row=6, column=1, padx=10, pady=10)
+
+# Function to display the users table
+def display_users_table():
+    # Connect to the SQLite database
+    conn = sqlite3.connect('parking_system.db')
+    c = conn.cursor()
+
+    # Fetch all rows from the users table
+    c.execute('SELECT * FROM users')
+    users = c.fetchall()
+
+    # Close the connection
+    conn.close()
+
+    # Create a new top-level window for displaying the users table
+    display_window = tk.Toplevel(root)
+    display_window.title('Users Table')
+    display_window.geometry('900x900')
+
+    # Create a treeview widget to display the users table
+    tree = ttk.Treeview(display_window)
+    tree["columns"] = ("Name", "Email", "Password" , "Vehicle Type", "Vehicle Number", "Gender", "Faculty")
+
+    # Define column headings
+    tree.column("#0", width=0, stretch=tk.NO)
+    tree.column("Name", anchor=tk.W, width=100)
+    tree.column("Email", anchor=tk.W, width=100)
+    tree.column("Password", anchor=tk.W, width=100)
+    tree.column("Vehicle Type", anchor=tk.W, width=100)
+    tree.column("Vehicle Number", anchor=tk.W, width=100)
+    tree.column("Gender", anchor=tk.W, width=100)
+    tree.column("Faculty", anchor=tk.W, width=100)
+
+    # Define column headings
+    tree.heading("#0", text="NO", anchor=tk.W)
+    tree.heading("Name", text="Name", anchor=tk.W)
+    tree.heading("Email", text="Email", anchor=tk.W)
+    tree.heading("Password", text="Password", anchor=tk.W)
+    tree.heading("Vehicle Type", text="Vehicle Type", anchor=tk.W)
+    tree.heading("Vehicle Number", text="Vehicle Number", anchor=tk.W)
+    tree.heading("Gender", text="Gender", anchor=tk.W)
+    tree.heading("Faculty", text="Faculty", anchor=tk.W)
+
+    # Insert data into the treeview
+    for user in users:
+        tree.insert("", "end", values=(user[1], user[2], user[3], user[4], user[5], user[6], user[7]))
+
+    tree.pack()
+
+
+#Button to display the users table
+button_display_users = tk.Button(root, text="Show Users Table", **button_info, command=display_users_table)
+button_display_users.pack(pady=20)
 
 def guard_sign_up():
     # Create a new top-level window for sign up form
@@ -447,17 +531,46 @@ def fci_layout():
         end_time_menu = tk.OptionMenu(time_selection_window, end_time, *times)
         end_time_menu.grid(row=1, column=1, padx=10, pady=10)
 
-        # Fuction to confirm reservation with selected time
+        # Label to show confirmation message
+        confirmation_label = tk.Label(time_selection_window, text="**Duration of parking cannot exceed 5 hours", bg='yellow', font=("Microsoft YaHei UI Light", 8), fg='black')
+        confirmation_label.grid(row=2, columnspan=3, padx=10, pady=10)
+
+        # Function to check if the selected duration is within the 5-hour limit
+        def check_duration(start, end):
+            start_hour = int(start.split(":")[0])
+            end_hour = int(end.split(":")[0])
+            if start_hour <= end_hour:
+                duration = end_hour - start_hour
+            else:
+                duration = (24 - start_hour) + end_hour
+            return duration <= 5
+
+        # Function to confirm reservation with selected time
         def confirm_reservation():
             chosen_start_time = start_time.get()
             chosen_end_time = end_time.get()
-            messagebox.showinfo("Parking Space", f"Parking Space {space} reserved successfull from {chosen_start_time} to {chosen_end_time}!")
-            button_dict[space].config(bg='red') #change button colour to red
-            time_selection_window.destroy()
+           
+            # Check if both start time and end time are selected
+            if not chosen_start_time or not chosen_end_time:
+                messagebox.showerror("Error", "Please select both the start time and end time.")
+                return
+            
+            # Check if either start or end time is "0:00"
+            if chosen_start_time == "0:00" or chosen_end_time == "0:00":
+                messagebox.showerror("Error", "Start time and end time cannot be 0:00.")
+                return
+            
+            # Check if the duration exceeds 5 hours
+            if check_duration(chosen_start_time, chosen_end_time):
+                messagebox.showinfo("Success", f"Parking Space {space} reserved from {chosen_start_time} to {chosen_end_time}!")
+                button_dict[space].config(bg='red')  # Change button color to red
+                time_selection_window.destroy()
+            else:
+                messagebox.showerror("Error", "Reservation duration cannot exceed 5 hours.")
 
         # Confirm button
         confirm_button = tk.Button(time_selection_window, text="RESERVED",bg='blue', font=("Microsoft YaHei UI Light", 10), fg='white', command=confirm_reservation)
-        confirm_button.grid(row=2, columnspan=2, pady=20)
+        confirm_button.grid(row=3, columnspan=3, pady=20)
 
     # Create buttons for each parking space
     for i in range(1, 51):
@@ -514,18 +627,47 @@ def foe_layout():
 
         end_time_menu = tk.OptionMenu(time_selection_window, end_time, *times)
         end_time_menu.grid(row=1, column=1, padx=10, pady=10)
+        
+        # Label to show confirmation message
+        confirmation_label = tk.Label(time_selection_window, text="**Duration of parking cannot exceed 5 hours", bg='yellow', font=("Microsoft YaHei UI Light", 8), fg='black')
+        confirmation_label.grid(row=2, columnspan=3, padx=10, pady=10)
 
-        # Fuction to confirm reservation with selected time
+        # Function to check if the selected duration is within the 5-hour limit
+        def check_duration(start, end):
+            start_hour = int(start.split(":")[0])
+            end_hour = int(end.split(":")[0])
+            if start_hour <= end_hour:
+                duration = end_hour - start_hour
+            else:
+                duration = (24 - start_hour) + end_hour
+            return duration <= 5
+        
+        # Function to confirm reservation with selected time
         def confirm_reservation():
             chosen_start_time = start_time.get()
             chosen_end_time = end_time.get()
-            messagebox.showinfo("Parking Space", f"Parking Space {space} reserved successfull from {chosen_start_time} to {chosen_end_time}!")
-            button_dict[space].config(bg='red') #change button colour to red
-            time_selection_window.destroy()
+           
+            # Check if both start time and end time are selected
+            if not chosen_start_time or not chosen_end_time:
+                messagebox.showerror("Error", "Please select both the start time and end time.")
+                return
+            
+            # Check if either start or end time is "0:00"
+            if chosen_start_time == "0:00" or chosen_end_time == "0:00":
+                messagebox.showerror("Error", "Start time and end time cannot be 0:00.")
+                return
+            
+            # Check if the duration exceeds 5 hours
+            if check_duration(chosen_start_time, chosen_end_time):
+                messagebox.showinfo("Success", f"Parking Space {space} reserved from {chosen_start_time} to {chosen_end_time}!")
+                button_dict[space].config(bg='red')  # Change button color to red
+                time_selection_window.destroy()
+            else:
+                messagebox.showerror("Error", "Reservation duration cannot exceed 5 hours.")
 
         # Confirm button
         confirm_button = tk.Button(time_selection_window, text="RESERVED",bg='green', font=("Microsoft YaHei UI Light", 10), fg='white', command=confirm_reservation)
-        confirm_button.grid(row=2, columnspan=2, pady=20)
+        confirm_button.grid(row=3, columnspan=3, pady=20)
 
     # Create buttons for each parking space
     for i in range(1, 51):
