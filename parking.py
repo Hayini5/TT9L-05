@@ -220,8 +220,6 @@ def student_sign_up():
                 conn.commit()  # Commit the changes to the database
                 messagebox.showinfo("Sign Up", "Sign Up Successful!")
                 signup_window.destroy()
-                # Call parking_system function after displaying user information
-                parking_system()
             except sqlite3.IntegrityError:
                 messagebox.showerror("Error", "Email already exists. Please choose a different one.")
             except Exception as e:
@@ -590,12 +588,12 @@ def fci_layout():
             # Check if both start time and end time are selected
             if not chosen_start_time or not chosen_end_time:
                 messagebox.showerror("Error", "Please select both the start time and end time.")
-                return space_selection_window()
+                return
 
             # Check if either start or end time is "0:00"
             if chosen_start_time == "0:00" or chosen_end_time == "0:00":
                 messagebox.showerror("Error", "Start time and end time cannot be 0:00.")
-                return space_selection_window()
+                return
 
             # Check if the duration exceeds 5 hours
             if check_duration(chosen_start_time, chosen_end_time):
@@ -709,12 +707,12 @@ def foe_layout():
             # Check if both start time and end time are selected
             if not chosen_start_time or not chosen_end_time:
                 messagebox.showerror("Error", "Please select both the start time and end time.")
-                return space_selection_window()
+                return
 
             # Check if either start or end time is "0:00"
             if chosen_start_time == "0:00" or chosen_end_time == "0:00":
                 messagebox.showerror("Error", "Start time and end time cannot be 0:00.")
-                return space_selection_window()
+                return
 
             # Check if the duration exceeds 5 hours
             if check_duration(chosen_start_time, chosen_end_time):
