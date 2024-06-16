@@ -34,9 +34,11 @@ c.execute('''
     )
 ''')
 
+# Create a table for reservation
 c.execute('''
     CREATE TABLE IF NOT EXISTS reservation (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        faculty TEXT NOT NULL,
         parking_space TEXT NOT NULL,
         start_time TEXT NOT NULL,
         end_time TEXT NOT NULL
@@ -218,6 +220,8 @@ def student_sign_up():
                 conn.commit()  # Commit the changes to the database
                 messagebox.showinfo("Sign Up", "Sign Up Successful!")
                 signup_window.destroy()
+                # Call parking_system function after displaying user information
+                parking_system()
             except sqlite3.IntegrityError:
                 messagebox.showerror("Error", "Email already exists. Please choose a different one.")
             except Exception as e:
@@ -563,34 +567,64 @@ def fci_layout():
         end_time_menu = tk.OptionMenu(time_selection_window, end_time, *times)
         end_time_menu.grid(row=1, column=1, padx=10, pady=10)
 
+        # Label to show confirmation message
+        confirmation_label = tk.Label(time_selection_window, text="**Duration of parking cannot exceed 5 hours", bg='yellow', font=("Microsoft YaHei UI Light", 8), fg='black')
+        confirmation_label.grid(row=2, columnspan=3, padx=10, pady=10)
+
+        # Function to check if the selected duration is within the 5-hour limit
+        def check_duration(start, end):
+            start_hour = int(start.split(":")[0])
+            end_hour = int(end.split(":")[0])
+            if start_hour <= end_hour:
+                duration = end_hour - start_hour
+            else:
+                duration = (24 - start_hour) + end_hour
+            return duration <= 5
+
         # Fuction to confirm reservation with selected time
         def confirm_reservation():
             chosen_parking_space = parking_space.get()
             chosen_start_time = start_time.get()
             chosen_end_time = end_time.get()
 
-            # Make a connection with the database
-            conn = get_db_connection()
-            c = conn.cursor()
+            # Check if both start time and end time are selected
+            if not chosen_start_time or not chosen_end_time:
+                messagebox.showerror("Error", "Please select both the start time and end time.")
+                return space_selection_window()
 
-            # Insert parking into the database
-            try:
-                c.execute("INSERT INTO reservation (faculty, parking_space, start_time, end_time) VALUES ('FCI', ?, ?, ?)", 
-                              (chosen_parking_space, chosen_start_time, chosen_end_time))
-                conn.commit()
-                messagebox.showinfo("Parking Space", f"Parking Space {chosen_parking_space} reserved successfully from {chosen_start_time} to {chosen_end_time}!")
-                button_dict[space].config(bg='red') #change button colour to red
-                time_selection_window.destroy()
+            # Check if either start or end time is "0:00"
+            if chosen_start_time == "0:00" or chosen_end_time == "0:00":
+                messagebox.showerror("Error", "Start time and end time cannot be 0:00.")
+                return space_selection_window()
 
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
+            # Check if the duration exceeds 5 hours
+            if check_duration(chosen_start_time, chosen_end_time):
 
-            finally:
-                conn.close() # Close the connection
+                # Make a connection with the database
+                conn = get_db_connection()
+                c = conn.cursor()
+
+                # Insert parking into the database
+                try:
+                    c.execute("INSERT INTO reservation (faculty, parking_space, start_time, end_time) VALUES ('FCI', ?, ?, ?)", 
+                                (chosen_parking_space, chosen_start_time, chosen_end_time))
+                    conn.commit()
+                    messagebox.showinfo("Success", f"Parking Space {chosen_parking_space} reserved from {chosen_start_time} to {chosen_end_time}!")
+                    button_dict[space].config(bg='red') #change button colour to red
+                    time_selection_window.destroy()
+
+                except Exception as e:
+                    messagebox.showerror("Error", str(e))
+
+                finally:
+                    conn.close() # Close the connection
+
+            else:
+                messagebox.showerror("Error", "Reservation duration cannot exceed 5 hours.")
 
         # Confirm button
         confirm_button = tk.Button(time_selection_window, text="RESERVED",bg='blue', font=("Microsoft YaHei UI Light", 10), fg='white', command=confirm_reservation)
-        confirm_button.grid(row=2, columnspan=2, pady=20)
+        confirm_button.grid(row=3, columnspan=3, pady=20)
 
     # Create buttons for each parking space
     for i in range(1, 51):
@@ -652,34 +686,64 @@ def foe_layout():
         end_time_menu = tk.OptionMenu(time_selection_window, end_time, *times)
         end_time_menu.grid(row=1, column=1, padx=10, pady=10)
 
+        # Label to show confirmation message
+        confirmation_label = tk.Label(time_selection_window, text="**Duration of parking cannot exceed 5 hours", bg='yellow', font=("Microsoft YaHei UI Light", 8), fg='black')
+        confirmation_label.grid(row=2, columnspan=3, padx=10, pady=10)
+
+        # Function to check if the selected duration is within the 5-hour limit
+        def check_duration(start, end):
+            start_hour = int(start.split(":")[0])
+            end_hour = int(end.split(":")[0])
+            if start_hour <= end_hour:
+                duration = end_hour - start_hour
+            else:
+                duration = (24 - start_hour) + end_hour
+            return duration <= 5
+
         # Fuction to confirm reservation with selected time
         def confirm_reservation():
             chosen_parking_space = parking_space.get()
             chosen_start_time = start_time.get()
             chosen_end_time = end_time.get()
 
-            # Make a connection with the database
-            conn = get_db_connection()
-            c = conn.cursor()
+            # Check if both start time and end time are selected
+            if not chosen_start_time or not chosen_end_time:
+                messagebox.showerror("Error", "Please select both the start time and end time.")
+                return space_selection_window()
 
-            # Insert parking into the database
-            try:
-                c.execute("INSERT INTO reservation (faculty, parking_space, start_time, end_time) VALUES ('FOE', ?, ?, ?)", 
-                              (chosen_parking_space, chosen_start_time, chosen_end_time))
-                conn.commit()
-                messagebox.showinfo("Parking Space", f"Parking Space {chosen_parking_space} reserved successfully from {chosen_start_time} to {chosen_end_time}!")
-                button_dict[space].config(bg='red') #change button colour to red
-                time_selection_window.destroy()
+            # Check if either start or end time is "0:00"
+            if chosen_start_time == "0:00" or chosen_end_time == "0:00":
+                messagebox.showerror("Error", "Start time and end time cannot be 0:00.")
+                return space_selection_window()
 
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
+            # Check if the duration exceeds 5 hours
+            if check_duration(chosen_start_time, chosen_end_time):
 
-            finally:
-                conn.close() # Close the connection
+                # Make a connection with the database
+                conn = get_db_connection()
+                c = conn.cursor()
+
+                # Insert parking into the database
+                try:
+                    c.execute("INSERT INTO reservation (faculty, parking_space, start_time, end_time) VALUES ('FOE', ?, ?, ?)", 
+                                (chosen_parking_space, chosen_start_time, chosen_end_time))
+                    conn.commit()
+                    messagebox.showinfo("Parking Space", f"Parking Space {chosen_parking_space} reserved successfully from {chosen_start_time} to {chosen_end_time}!")
+                    button_dict[space].config(bg='red') #change button colour to red
+                    time_selection_window.destroy()
+
+                except Exception as e:
+                    messagebox.showerror("Error", str(e))
+
+                finally:
+                    conn.close() # Close the connection
+
+            else:
+                messagebox.showerror("Error", "Reservation duration cannot exceed 5 hours.")
 
         # Confirm button
         confirm_button = tk.Button(time_selection_window, text="RESERVED",bg='green', font=("Microsoft YaHei UI Light", 10), fg='white', command=confirm_reservation)
-        confirm_button.grid(row=2, columnspan=2, pady=20)
+        confirm_button.grid(row=3, columnspan=3, pady=20)
 
     # Create buttons for each parking space
     for i in range(1, 51):
