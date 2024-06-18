@@ -38,10 +38,12 @@ c.execute('''
 c.execute('''
     CREATE TABLE IF NOT EXISTS reservation (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
         faculty TEXT NOT NULL,
         parking_space TEXT NOT NULL,
         start_time TEXT NOT NULL,
-        end_time TEXT NOT NULL
+        end_time TEXT NOT NULL,
+        FOREIGN KEY(email) REFERENCES student(email)
     )
 ''')
 
@@ -426,10 +428,13 @@ def student_login():
 
     # Function to handle submission
     def submit():
-        student_email = entry_student_email.get()
+        # Make the student login email global when submitted
+        global login_student_email
+
+        login_student_email = entry_student_email.get()
         password = entry_password.get()
 
-        if not student_email or not password:
+        if not login_student_email or not password:
             messagebox.showwarning("Input Error", "All fields are required.")
             student_window.destroy()
             return student_login()
@@ -438,7 +443,7 @@ def student_login():
             c = conn.cursor()
             c.execute('''
                 SELECT * FROM student WHERE email = ? AND password = ?
-            ''', (student_email, password))
+            ''', (login_student_email, password))
             result = c.fetchone()
             conn.close()
             if result:
@@ -457,7 +462,7 @@ def student_login():
     button_submit = tk.Button(loginform_frame, text="LOGIN", font=("Microsoft YaHei UI Light", 16), fg='black', command=submit)
     button_submit.grid(row=4, columnspan=2, pady=10)
 
-    # Function to handle the booking, cancelation and extension
+# Function to handle the booking, cancelation and extension
 def parking_system():
     # Create a new top-level window for parking system
     parking_system_window = tk.Toplevel(root)
@@ -604,12 +609,16 @@ def fci_layout():
 
                 # Insert parking into the database
                 try:
-                    c.execute("INSERT INTO reservation (faculty, parking_space, start_time, end_time) VALUES ('FCI', ?, ?, ?)", 
-                                (chosen_parking_space, chosen_start_time, chosen_end_time))
+                    c.execute("INSERT INTO reservation (email, faculty, parking_space, start_time, end_time) VALUES (?, 'FCI', ?, ?, ?)", 
+                                (login_student_email, chosen_parking_space, chosen_start_time, chosen_end_time))
                     conn.commit()
                     messagebox.showinfo("Success", f"Parking Space {chosen_parking_space} reserved from {chosen_start_time} to {chosen_end_time}!")
                     button_dict[space].config(bg='red') #change button colour to red
                     time_selection_window.destroy()
+
+                # Shows error when parking already reserved
+                except sqlite3.IntegrityError:
+                    messagebox.showerror("Error", "You have already reserved a parking space.")
 
                 except Exception as e:
                     messagebox.showerror("Error", str(e))
@@ -723,12 +732,16 @@ def foe_layout():
 
                 # Insert parking into the database
                 try:
-                    c.execute("INSERT INTO reservation (faculty, parking_space, start_time, end_time) VALUES ('FOE', ?, ?, ?)", 
-                                (chosen_parking_space, chosen_start_time, chosen_end_time))
+                    c.execute("INSERT INTO reservation (email, faculty, parking_space, start_time, end_time) VALUES (?, 'FOE', ?, ?, ?)", 
+                                (login_student_email, chosen_parking_space, chosen_start_time, chosen_end_time))
                     conn.commit()
                     messagebox.showinfo("Parking Space", f"Parking Space {chosen_parking_space} reserved successfully from {chosen_start_time} to {chosen_end_time}!")
                     button_dict[space].config(bg='red') #change button colour to red
                     time_selection_window.destroy()
+
+                # Shows error when parking already reserved
+                except sqlite3.IntegrityError:
+                    messagebox.showerror("Error", "You have already reserved a parking space.")
 
                 except Exception as e:
                     messagebox.showerror("Error", str(e))
@@ -841,6 +854,12 @@ button_student.pack(pady=20)
 
 button_guard = tk.Button(root, text="GUARD", command=guard_login, **button_info)
 button_guard.pack(pady=20)
+
+conn = get_db_connection()
+c = conn.cursor()
+c.execute("SELECT * FROM reservation")
+result = c.fetchall()
+print(result)
 
 # Main loop to run the Tkinter application
 root.mainloop()
