@@ -397,6 +397,49 @@ def guard_sign_up():
     button_submit = tk.Button(signupform_frame, text="Submit", command=submit)
     button_submit.grid(row=5, column=1, padx=10, pady=10)
 
+#Function to handle the forget password button
+def forget_password():
+    # Create a new top-level window for password reset
+    forget_window = tk.Toplevel(root)
+    forget_window.title('FORGOT PASSWORD')
+    forget_window.geometry('300x200')
+
+    # Create a frame to hold the form
+    frame = tk.Frame(forget_window, bg='white', bd=10)
+    frame.place(relx=0.5, rely=0.5, anchor='center')
+   
+    # Email Label and Entry
+    label_email = tk.Label(frame, text="Enter your Email:", font=("Times New Roman", 13,), fg='black', bg='white')
+    label_email.grid(row=0, column=0, padx=10, pady=5)
+
+    entry_email = tk.Entry(frame, font=("Times New Roman", 10,), fg='black', bg='white' )
+    entry_email.grid(row=0, column=1, padx=10, pady=5)
+
+    # Function to handle password reset
+    def reset_password():
+        email = entry_email.get()
+
+        if not email:
+            messagebox.showwarning("Input Error", "Email field is required.")
+            return
+
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT password FROM student WHERE email = ?', (email,))
+        result = c.fetchone()
+        conn.close()
+
+        if result:
+            password = result[0]
+            messagebox.showinfo("Password Reset", f"Your password is: {password}")
+            forget_window.destroy()
+        else:
+            messagebox.showerror("Error", "No account found with this email.")
+
+    # Submit Button
+    button_submit = tk.Button(frame, text="SUBMIT", font=("Times New Roman", 12), fg='red', command=reset_password)
+    button_submit.grid(row=1, columnspan=2, pady=10)
+
 # Function to handle the student login process
 def student_login():
     global logged_in_student_email  # Declare as global to modify the global variable
@@ -472,7 +515,7 @@ def student_login():
                 messagebox.showerror("Login Error", "Invalid User Email or Password")
 
     # Forget Password Button
-    button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red', command=submit)
+    button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red', command=forget_password)
     button_forget.grid(row=3, column=1, sticky="e", pady=5, padx=10)
 
     # Submit Button
@@ -919,6 +962,49 @@ def display_reservation_table():
 
     tree.pack()
 
+    #Function to handle the forget password button
+def forget_guard_password():
+    # Create a new top-level window for password reset
+    forget_window = tk.Toplevel(root)
+    forget_window.title('FORGOT PASSWORD')
+    forget_window.geometry('300x200')
+
+    # Create a frame to hold the form
+    frame = tk.Frame(forget_window, bg='white', bd=10)
+    frame.place(relx=0.5, rely=0.5, anchor='center')
+   
+    # Email Label and Entry
+    label_id = tk.Label(frame, text="Enter your NO.PK:", font=("Times New Roman", 12,), fg='black', bg='white')
+    label_id.grid(row=0, column=0, padx=10, pady=5)
+
+    entry_id = tk.Entry(frame, font=("Times New Roman", 10,), fg='black', bg='white' )
+    entry_id.grid(row=0, column=1, padx=10, pady=5)
+
+    # Function to handle password reset
+    def reset_password():
+        guard_id = entry_id.get()
+
+        if not guard_id:
+            messagebox.showwarning("Input Error", "Guard_ID field is required.")
+            return
+
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT password FROM guard WHERE user_id = ?', (guard_id,))
+        result = c.fetchone()
+        conn.close()
+
+        if result:
+            password = result[0]
+            messagebox.showinfo("Password Reset", f"Your password is: {password}")
+            forget_window.destroy()
+        else:
+            messagebox.showerror("Error", "No account found with this Guard_ID.")
+
+    # Submit Button
+    button_submit = tk.Button(frame, text="SUBMIT", font=("Times New Roman", 12), fg='red', command=reset_password)
+    button_submit.grid(row=1, columnspan=2, pady=10)
+
     # Function to handle the guard login process
 def guard_login():
     # Create a new top-level window for guard login form
@@ -996,7 +1082,7 @@ def guard_login():
     button_login.grid(row=4, columnspan=2, pady=10)
     
     # Forget Password Button
-    button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red', command=login)
+    button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red', command=forget_guard_password)
     button_forget.grid(row=3, column=1, sticky="e", pady=5, padx=10)
 
 
@@ -1017,19 +1103,19 @@ def parking_checking():
     button_frame.place(relx=0.5, rely=0.6, anchor='center')  # Adjust the rely parameter to move the frame down
 
     # Create a button to handle data of users
-    Data_button = tk.Button(parking_checking_window, text="Show Data",  width=20, height=2, font=('Times New Roman', 18), command=display_users_table)
+    Data_button = tk.Button(parking_checking_window, text="Sign up Information of Students",  width=30, height=2, font=('Times New Roman', 18), command=display_users_table)
     Data_button.pack(pady=20)
 
     # Create a button to handle data of users
-    Reservation_button = tk.Button(parking_checking_window, text="Show Reservation Table",  width=20, height=2, font=('Times New Roman', 18), command=display_reservation_table)
+    Reservation_button = tk.Button(parking_checking_window, text="Reservation Table Information",  width=25, height=2, font=('Times New Roman', 18), command=display_reservation_table)
     Reservation_button.pack(pady=20)
 
     # Create a button to handle fci layout
-    Show_fci_button = tk.Button(parking_checking_window, text="Show FCI layout",  width=20, height=2, font=('Times New Roman', 18), command=parking_checking)
+    Show_fci_button = tk.Button(parking_checking_window, text="FCI Parking layout",  width=20, height=2, font=('Times New Roman', 18), command=fci_layout)
     Show_fci_button.pack(pady=20)
 
-    # Create a button to handle fcoe layout
-    Show_foe_button = tk.Button(parking_checking_window, text="Show FOE layout",  width=20, height=2, font=('Times New Roman', 18), command=parking_checking)
+    # Create a button to handle foe layout
+    Show_foe_button = tk.Button(parking_checking_window, text="FOE Parking layout",  width=20, height=2, font=('Times New Roman', 18), command=foe_layout)
     Show_foe_button.pack(pady=20)
 
 # Buttons for Sign Up, Student, and Guard 
