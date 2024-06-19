@@ -560,33 +560,46 @@ def fci_layout():
         return end_time[0] if end_time else None
     
     def cancellation(space):
-        # Create a new top-level window for cancelling reservation
-        cancel_window = tk.Toplevel(space_selection_window)
-        cancel_window.title('Cancel reservation')
-        cancel_window.geometry('400x200')
+        # Check if the user reserved the space or not
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM reservation WHERE parking_space = ?", (space,))
+        reservation_data = c.fetchone()
+        conn.close()
 
-        # Define a grid
-        cancel_window.columnconfigure((0,1,2,3,4), weight=1)
-        cancel_window.rowconfigure((0,1,2,3), weight=1)
+        if reservation_data[1] == logged_in_student_email:
+            # Create a new top-level window for cancelling reservation
+            cancel_window = tk.Toplevel(space_selection_window)
+            cancel_window.title('Cancel reservation')
+            cancel_window.geometry('400x200')
 
-        # Function to cancel the reservation
-        def cancel():
-            conn = get_db_connection()
-            c = conn.cursor()
-            c.execute("DELETE FROM reservation WHERE parking_space = ?", (space,))
-            messagebox.showinfo("Success", "Parking reservation is cancelled successfully.")
-            conn.commit()
-            conn.close()
-            cancel_window.destroy() # Close the cancellation window after reservation is cancelled
+            # Define a grid
+            cancel_window.columnconfigure((0,1,2,3,4), weight=1)
+            cancel_window.rowconfigure((0,1,2,3), weight=1)
 
-        label = tk.Label(cancel_window, text="Would you like to cancel reservation?", font=3)
-        label.grid(row=1, column=1, columnspan=3)
+            # Function to cancel the reservation
+            def cancel():
+                conn = get_db_connection()
+                c = conn.cursor()
+                c.execute("DELETE FROM reservation WHERE parking_space = ?", (space,))
+                messagebox.showinfo("Success", "Parking reservation is cancelled successfully.")
+                conn.commit()
+                conn.close()
+                cancel_window.destroy() # Close the cancellation window after reservation is cancelled
 
-        yes_button = tk.Button(cancel_window, text="Yes", bg='light grey', font=2, command=cancel)
-        yes_button.grid(row=2, column=1, sticky='ew')
+            label = tk.Label(cancel_window, text="Would you like to cancel reservation?", font=3)
+            label.grid(row=1, column=1, columnspan=3)
 
-        no_button = tk.Button(cancel_window, text="No", bg='light grey', font=2, command=lambda: cancel_window.destroy())
-        no_button.grid(row=2, column=3, sticky='ew')
+            yes_button = tk.Button(cancel_window, text="Yes", bg='light grey', font=2, command=cancel)
+            yes_button.grid(row=2, column=1, sticky='ew')
+
+            no_button = tk.Button(cancel_window, text="No", bg='light grey', font=2, command=lambda: cancel_window.destroy())
+            no_button.grid(row=2, column=3, sticky='ew')
+
+        else:
+            messagebox.showerror("Error", "Parking space is already reserved by another student.")
+            button_dict[space].config(state='disabled')
+            return
 
     # Function to handle button clicks
     def reserve_space(space, button_dict):
@@ -685,6 +698,10 @@ def fci_layout():
                               (logged_in_student_email, 'FCI', chosen_parking_space, chosen_start_time, chosen_end_time))
                     conn.commit()
                     messagebox.showinfo("Success", "Parking space reserved successfully.")
+                    messagebox.showinfo("Success", "Parking space reserved successfully.")
+                    button_dict[space].config(bg='red', text=f"Space {space}\nReserved") #change button colour to red and update the text
+                    time_selection_window.destroy()
+
                 except sqlite3.Error as e:
                     messagebox.showerror("Error", "Failed to reserve parking space. Error: " + str(e))
                 finally:
@@ -781,33 +798,46 @@ def foe_layout():
         return end_time[0] if end_time else None
     
     def cancellation(space):
-        # Create a new top-level window for cancelling reservation
-        cancel_window = tk.Toplevel(space_selection_window)
-        cancel_window.title('Cancel reservation')
-        cancel_window.geometry('400x200')
+        # Check if the user reserved the space or not
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM reservation WHERE parking_space = ?", (space,))
+        reservation_data = c.fetchone()
+        conn.close()
 
-        # Define a grid
-        cancel_window.columnconfigure((0,1,2,3,4), weight=1)
-        cancel_window.rowconfigure((0,1,2,3), weight=1)
+        if reservation_data[1] == logged_in_student_email:
+            # Create a new top-level window for cancelling reservation
+            cancel_window = tk.Toplevel(space_selection_window)
+            cancel_window.title('Cancel reservation')
+            cancel_window.geometry('400x200')
 
-        # Function to cancel the reservation
-        def cancel():
-            conn = get_db_connection()
-            c = conn.cursor()
-            c.execute("DELETE FROM reservation WHERE parking_space = ?", (space,))
-            messagebox.showinfo("Success", "Parking reservation is cancelled successfully.")
-            conn.commit()
-            conn.close()
-            cancel_window.destroy() # Close the cancellation window after reservation is cancelled
+            # Define a grid
+            cancel_window.columnconfigure((0,1,2,3,4), weight=1)
+            cancel_window.rowconfigure((0,1,2,3), weight=1)
 
-        label = tk.Label(cancel_window, text="Would you like to cancel reservation?", font=3)
-        label.grid(row=1, column=1, columnspan=3)
+            # Function to cancel the reservation
+            def cancel():
+                conn = get_db_connection()
+                c = conn.cursor()
+                c.execute("DELETE FROM reservation WHERE parking_space = ?", (space,))
+                messagebox.showinfo("Success", "Parking reservation is cancelled successfully.")
+                conn.commit()
+                conn.close()
+                cancel_window.destroy() # Close the cancellation window after reservation is cancelled
 
-        yes_button = tk.Button(cancel_window, text="Yes", bg='light grey', font=2, command=cancel)
-        yes_button.grid(row=2, column=1, sticky='ew')
+            label = tk.Label(cancel_window, text="Would you like to cancel reservation?", font=3)
+            label.grid(row=1, column=1, columnspan=3)
 
-        no_button = tk.Button(cancel_window, text="No", bg='light grey', font=2, command=lambda: cancel_window.destroy())
-        no_button.grid(row=2, column=3, sticky='ew')
+            yes_button = tk.Button(cancel_window, text="Yes", bg='light grey', font=2, command=cancel)
+            yes_button.grid(row=2, column=1, sticky='ew')
+
+            no_button = tk.Button(cancel_window, text="No", bg='light grey', font=2, command=lambda: cancel_window.destroy())
+            no_button.grid(row=2, column=3, sticky='ew')
+
+        else:
+            messagebox.showerror("Error", "Parking space is already reserved by another student.")
+            button_dict[space].config(state='disabled')
+            return
 
     # Function to handle button clicks
     def reserve_space(space, button_dict):
@@ -906,6 +936,10 @@ def foe_layout():
                               (logged_in_student_email, 'FOE', chosen_parking_space, chosen_start_time, chosen_end_time))
                     conn.commit()
                     messagebox.showinfo("Success", "Parking space reserved successfully.")
+                    messagebox.showinfo("Success", "Parking space reserved successfully.")
+                    button_dict[space].config(bg='red', text=f"Space {space}\nReserved") #change button colour to red and update the text
+                    time_selection_window.destroy()
+                    
                 except sqlite3.Error as e:
                     messagebox.showerror("Error", "Failed to reserve parking space. Error: " + str(e))
                 finally:
