@@ -1,3 +1,4 @@
+from curses import BUTTON_CTRL
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
@@ -38,19 +39,18 @@ c.execute('''
 c.execute('''
     CREATE TABLE IF NOT EXISTS reservation (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE NOT NULL,
+        student_email TEXT UNIQUE NOT NULL, 
         faculty TEXT NOT NULL,
         parking_space TEXT NOT NULL,
         start_time TEXT NOT NULL,
-        end_time TEXT NOT NULL,
-        FOREIGN KEY(email) REFERENCES student(email)
+        end_time TEXT NOT NULL
     )
 ''')
 
-# Add the vehicle_type column to the student table
+# Add the student_email column to the reservation table
 try:
-    c.execute('ALTER TABLE student ADD COLUMN vehicle_type TEXT')
-    print("Column 'vehicle_type' added successfully.")
+    c.execute('ALTER TABLE reservation ADD COLUMN student_email TEXT UNIQUE NOT NULL')
+    print("Column 'student_email' added successfully.")
 except sqlite3.OperationalError as e:
     print("Error:", e)
 
@@ -58,14 +58,25 @@ except sqlite3.OperationalError as e:
 conn.commit()
 conn.close()
 
+# Global variable to store the currently logged-in student's email
+logged_in_student_email = None
 
 # Function to get a database connection
 def get_db_connection():
     return sqlite3.connect('parking_system.db')
 
-# Function to validate MMU student email
+# Function to validate MMU student email and validate NO KP
 def validate_mmu_email(student_email):
     return re.match(r"^\d{10}@student\.mmu\.edu\.my$", student_email) is not None
+
+def validate_guard_id(NO_KP):
+    return re.match(r"^[A-Z]{2}-\d{3}$", NO_KP.upper()) is not None
+
+test_id = " NS-111 "
+if validate_guard_id(test_id):
+    print(f"{test_id.strip()} is a valid ID.")
+else:
+    print(f"{test_id.strip()} is an invalid ID.")
 
 root = tk.Tk()
 root.title('LOGIN')
@@ -137,21 +148,21 @@ def student_sign_up():
     signupform_frame.place(relx=0.5, rely=0.5, anchor='center')
 
     # Name Label and Entry
-    label_name = tk.Label(signupform_frame, text="Name", fg='black', bg='white')
+    label_name = tk.Label(signupform_frame, text="Name:", fg='black', bg='white')
     label_name.grid(row=0, column=0, padx=10, pady=5)
 
     entry_name = tk.Entry(signupform_frame)
     entry_name.grid(row=0, column=1, padx=10, pady=5)
 
     # Email Label and Entry
-    label_email = tk.Label(signupform_frame, text=" MMU Email", fg='black', bg='white')
+    label_email = tk.Label(signupform_frame, text=" MMU Email:", fg='black', bg='white')
     label_email.grid(row=1, column=0, padx=10, pady=5)
 
     entry_email = tk.Entry(signupform_frame)
     entry_email.grid(row=1, column=1, padx=10, pady=5)
 
     # Password Label and Entry
-    label_password = tk.Label(signupform_frame, text="Password", fg='black', bg='white')
+    label_password = tk.Label(signupform_frame, text="Password:", fg='black', bg='white')
     label_password.grid(row=2, column=0, padx=10, pady=5)
 
     entry_password = tk.Entry(signupform_frame, show="*")
@@ -169,7 +180,7 @@ def student_sign_up():
     toggle_button.grid(row=2, column=2, padx=10, pady=5)
 
     # Vehicle Type Label and OptionMenu
-    label_vehicle_type = tk.Label(signupform_frame, text="Vehicle Type", fg='black', bg='white')
+    label_vehicle_type = tk.Label(signupform_frame, text="Vehicle Type:", fg='black', bg='white')
     label_vehicle_type.grid(row=3, column=0, padx=10, pady=5)
 
     vehicle_type = tk.StringVar(signupform_frame)
@@ -178,14 +189,14 @@ def student_sign_up():
     option_vehicle_type.grid(row=3, column=1, padx=10, pady=5)
 
     # Vehicle Number Plate Label and Entry
-    label_vehicle_number = tk.Label(signupform_frame, text="Vehicle Number Plate", fg='black', bg='white')
+    label_vehicle_number = tk.Label(signupform_frame, text="Vehicle Number Plate:", fg='black', bg='white')
     label_vehicle_number.grid(row=4, column=0, padx=10, pady=5)
 
     entry_vehicle_number = tk.Entry(signupform_frame)
     entry_vehicle_number.grid(row=4, column=1, padx=10, pady=5)
 
     # Gender and OptionMenu
-    gender_type_label = tk.Label(signupform_frame, text="Gender", fg='black', bg='white')
+    gender_type_label = tk.Label(signupform_frame, text="Gender:", fg='black', bg='white')
     gender_type_label.grid(row=5, column=0, padx=10, pady=5)
 
     gender_type = tk.StringVar(signupform_frame)
@@ -254,13 +265,12 @@ def display_users_table():
 
     # Create a treeview widget to display the users table
     tree = ttk.Treeview(display_window)
-    tree["columns"] = ("Name", "Email", "Password" , "Vehicle Type", "Vehicle Number", "Gender")
+    tree["columns"] = ("Name", "Email",  "Vehicle Type", "Vehicle Number", "Gender")
 
     # Define column headings
     tree.column("#0", width=0, stretch=tk.NO)
     tree.column("Name", anchor=tk.W, width=100)
-    tree.column("Email", anchor=tk.W, width=100)
-    tree.column("Password", anchor=tk.W, width=100)
+    tree.column("Email", anchor=tk.W, width=200)
     tree.column("Vehicle Type", anchor=tk.W, width=100)
     tree.column("Vehicle Number", anchor=tk.W, width=100)
     tree.column("Gender", anchor=tk.W, width=100)
@@ -269,21 +279,17 @@ def display_users_table():
     tree.heading("#0", text="NO", anchor=tk.W)
     tree.heading("Name", text="Name", anchor=tk.W)
     tree.heading("Email", text="Email", anchor=tk.W)
-    tree.heading("Password", text="Password", anchor=tk.W)
     tree.heading("Vehicle Type", text="Vehicle Type", anchor=tk.W)
     tree.heading("Vehicle Number", text="Vehicle Number", anchor=tk.W)
     tree.heading("Gender", text="Gender", anchor=tk.W)
 
     # Insert data into the treeview
     for user in users:
-        tree.insert("", "end", values=(user[1], user[2], user[3], user[4], user[5], user[6]))
+        tree.insert("", "end", values=(user[1], user[2], user[3], user[4], user[5]))
 
     tree.pack()
 
 
-#Button to display the users table
-button_display_users = tk.Button(root, text="Show Users Table", **button_info, command=display_users_table)
-button_display_users.pack(pady=20)
 
 def guard_sign_up():
     # Create a new top-level window for sign up form
@@ -300,34 +306,25 @@ def guard_sign_up():
     signupform_frame.place(relx=0.5, rely=0.5, anchor='center')
 
 # Name Label and Entry
-    label_name = tk.Label(signupform_frame, text="Name", fg='black', bg='white')
+    label_name = tk.Label(signupform_frame, text="Name:", fg='black', bg='white')
     label_name.grid(row=0, column=0, padx=10, pady=5)
 
     entry_name = tk.Entry(signupform_frame)
     entry_name.grid(row=0, column=1, padx=10, pady=5)
 
     # ID Label and Entry
-    label_id = tk.Label(signupform_frame, text="ID", fg='black', bg='white')
+    label_id = tk.Label(signupform_frame, text="NO.PK:", fg='black', bg='white')
     label_id.grid(row=1, column=0, padx=10, pady=5)
 
     entry_id = tk.Entry(signupform_frame)
     entry_id.grid(row=1, column=1, padx=10, pady=5)
 
     # Password Label and Entry
-    label_password = tk.Label(signupform_frame, text="Password", fg='black', bg='white')
+    label_password = tk.Label(signupform_frame, text="Password:", fg='black', bg='white')
     label_password.grid(row=2, column=0, padx=10, pady=5)
 
     entry_password = tk.Entry(signupform_frame, show="*")
     entry_password.grid(row=2, column=1, padx=10, pady=5)
-
-    # Gender and OptionMenu
-    gender_type_label = tk.Label(signupform_frame, text="Gender",  fg='black', bg='white')
-    gender_type_label.grid(row=3, column=0, padx=10, pady=5)
-
-    gender_type = tk.StringVar(signupform_frame)
-    gender_type.set("select")  # default value
-    option_gender_type = tk.OptionMenu(signupform_frame, gender_type, "Female", "Male")
-    option_gender_type.grid(row=3, column=1, padx=10, pady=5)
 
     def toggle_password():
         if entry_password.cget('show')== '':
@@ -339,9 +336,18 @@ def guard_sign_up():
         
     toggle_button = tk.Button(signupform_frame, text='Show', command=toggle_password)
     toggle_button.grid(row=2, column=2, padx=10, pady=5)
+    
+    # Gender and OptionMenu
+    gender_type_label = tk.Label(signupform_frame, text="Gender:",  fg='black', bg='white')
+    gender_type_label.grid(row=3, column=0, padx=10, pady=5)
+
+    gender_type = tk.StringVar(signupform_frame)
+    gender_type.set("select")  # default value
+    option_gender_type = tk.OptionMenu(signupform_frame, gender_type, "Female", "Male")
+    option_gender_type.grid(row=3, column=1, padx=10, pady=5)
 
      # Faculty and Entry
-    faculty_label = tk.Label(signupform_frame, text="Faculty", fg='black', bg='white')
+    faculty_label = tk.Label(signupform_frame, text="Faculty:", fg='black', bg='white')
     faculty_label.grid(row=4, column=0, padx=10, pady=5)
 
     faculty_entry = tk.Entry(signupform_frame)
@@ -359,6 +365,10 @@ def guard_sign_up():
             messagebox.showwarning("Input Error", "All fields are required.")
             signup_window.destroy()
             return guard_sign_up()
+        elif not validate_guard_id(guard_id):
+            messagebox.showwarning("Input Error", "Invalid Guard ID. Please enter a valid ID")
+            signup_window.destroy()
+            return guard_sign_up()
         else:
             # Insert user data into the SQLite database
             try:
@@ -372,9 +382,9 @@ def guard_sign_up():
                 messagebox.showinfo("Sign Up", "Sign Up Successful!")
                 signup_window.destroy()
             except sqlite3.IntegrityError:
-                messagebox.showerror("Sign Up Error", "Guard ID already exists. Please choose a different one.")
+                messagebox.showerror("Error", "Guard ID already exists. Please choose a different one.")
             except Exception as e:
-                messagebox.showerror("Database Error", str(e))
+                messagebox.showerror("Error", str(e))
 
     # Submit Button
     button_submit = tk.Button(signupform_frame, text="Submit", command=submit)
@@ -382,6 +392,8 @@ def guard_sign_up():
 
 # Function to handle the student login process
 def student_login():
+    global logged_in_student_email  # Declare as global to modify the global variable
+
     # Create a new top-level window for login form
     student_window = tk.Toplevel(root)
     student_window.title('STUDENT LOGIN FORM')
@@ -401,14 +413,14 @@ def student_login():
     student_heading.grid(row=0, columnspan=2, pady=20)
 
     # Student_ID Label and Entry
-    label_student_email = tk.Label(loginform_frame, text="Student_Email", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
+    label_student_email = tk.Label(loginform_frame, text="Student_Email:", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
     label_student_email.grid(row=1, column=0, padx=10, pady=5)
 
     entry_student_email = tk.Entry(loginform_frame)
     entry_student_email.grid(row=1, column=1, padx=10, pady=5)
 
     # Password Label and Entry
-    label_password = tk.Label(loginform_frame, text="Password", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
+    label_password = tk.Label(loginform_frame, text="Password:", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
     label_password.grid(row=2, column=0, padx=10, pady=5)
 
     entry_password = tk.Entry(loginform_frame, show="*")
@@ -443,10 +455,12 @@ def student_login():
             c = conn.cursor()
             c.execute('''
                 SELECT * FROM student WHERE email = ? AND password = ?
-            ''', (login_student_email, password))
+            ''', (student_email, password))
             result = c.fetchone()
             conn.close()
             if result:
+                global logged_in_student_email
+                logged_in_student_email = student_email  # Store the logged-in student's email
                 messagebox.showinfo("Login", "Login Successful!")
                 student_window.destroy()
                 # Call parking_system function after displaying user information
@@ -536,7 +550,15 @@ def fci_layout():
     button_dict ={}
 
     # Function to handle button clicks
-    def reserve_space(space):
+    def reserve_space(space, button_dict):
+        # Check if the parking space is already reserved
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM reservation WHERE faculty='FCI' AND parking_space=?", (space,))
+        if c.fetchone():
+            messagebox.showerror("Error", "Parking space is already reserved.")
+            return
+
         # Create a new window for time selection
         time_selection_window= tk.Toplevel(space_selection_window)
         time_selection_window.title('Select Time')
@@ -609,16 +631,13 @@ def fci_layout():
 
                 # Insert parking into the database
                 try:
-                    c.execute("INSERT INTO reservation (email, faculty, parking_space, start_time, end_time) VALUES (?, 'FCI', ?, ?, ?)", 
-                                (login_student_email, chosen_parking_space, chosen_start_time, chosen_end_time))
+                    c.execute("INSERT INTO reservation (student_email, faculty, parking_space, start_time, end_time) VALUES (?,'FCI',?,?,?)", 
+                                (logged_in_student_email, chosen_parking_space, chosen_start_time, chosen_end_time))
                     conn.commit()
                     messagebox.showinfo("Success", f"Parking Space {chosen_parking_space} reserved from {chosen_start_time} to {chosen_end_time}!")
-                    button_dict[space].config(bg='red') #change button colour to red
+                    button_dict[chosen_parking_space].config(bg='red', text="Reserved")  # change button colour to red and text to "Reserved"
                     time_selection_window.destroy()
 
-                # Shows error when parking already reserved
-                except sqlite3.IntegrityError:
-                    messagebox.showerror("Error", "You have already reserved a parking space.")
 
                 except Exception as e:
                     messagebox.showerror("Error", str(e))
@@ -637,12 +656,27 @@ def fci_layout():
     for i in range(1, 51):
         button_text = f"Space {i}"
         button = tk.Button(layout_frame, text=f"Space {i}", font=("Arial", 10), width=10, height=2,
-                           command=lambda i=i: reserve_space(i))
+                           command=lambda i=i, button_dict=button_dict: reserve_space(i, button_dict))
         row = (i - 1) // 10
         col = (i - 1) % 10
         button.grid(row=row, column=col, padx=5, pady=5)
-        button_dict[i] = button #Store button reference in dictionary
+        button_dict[i] = button  # Store button reference in dictionary
 
+def update_reserved_spaces():
+    # Make a connection with the database
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    # Fetch the reserved parking spaces for the FCI faculty
+    c.execute("SELECT parking_space FROM reservation WHERE faculty='FCI'")
+    reserved_spaces = c.fetchall()
+
+    # Update the button_dict with the reserved spaces' color
+    for space in reserved_spaces:
+         BUTTON_CTRL[space[0]].config(bg='red', text="Reserved")
+
+    conn.close()  # Close the connection
+    
     # Function to let student choose parking space
     # Function to let student choose parking space
 def foe_layout():
@@ -732,16 +766,12 @@ def foe_layout():
 
                 # Insert parking into the database
                 try:
-                    c.execute("INSERT INTO reservation (email, faculty, parking_space, start_time, end_time) VALUES (?, 'FOE', ?, ?, ?)", 
-                                (login_student_email, chosen_parking_space, chosen_start_time, chosen_end_time))
+                    c.execute("INSERT INTO reservation (student_email, faculty, parking_space, start_time, end_time) VALUES (?,'FOE', ?, ?, ?)", 
+                                (logged_in_student_email, chosen_parking_space, chosen_start_time, chosen_end_time))
                     conn.commit()
                     messagebox.showinfo("Parking Space", f"Parking Space {chosen_parking_space} reserved successfully from {chosen_start_time} to {chosen_end_time}!")
                     button_dict[space].config(bg='red') #change button colour to red
                     time_selection_window.destroy()
-
-                # Shows error when parking already reserved
-                except sqlite3.IntegrityError:
-                    messagebox.showerror("Error", "You have already reserved a parking space.")
 
                 except Exception as e:
                     messagebox.showerror("Error", str(e))
@@ -765,7 +795,58 @@ def foe_layout():
         col = (i - 1) % 10
         button.grid(row=row, column=col, padx=5, pady=5)
         button_dict[i] = button #Store button reference in dictionary
-        
+
+    # Function to display the users table
+def display_reservation_table():
+    # Connect to the SQLite database
+    conn = sqlite3.connect('parking_system.db')
+    c = conn.cursor() 
+   
+    # Fetch all rows from the reservation table
+    c.execute('SELECT * FROM reservation')
+    users = c.fetchall()
+
+
+    # Fetch all rows from the reservation table
+    c.execute('SELECT student_email, faculty, parking_space, start_time, end_time FROM reservation')
+    users = c.fetchall()
+
+    # Close the connection
+    conn.close()
+
+    # Create a new top-level window for displaying the reservation table
+    display_window = tk.Toplevel(root)
+    display_window.title('Reservation Table')
+    display_window.geometry('900x900')
+
+    # Create a treeview widget to display the reservation table
+    tree = ttk.Treeview(display_window)
+    tree["columns"] = ("Student Email", "Faculty", "Parking Space", "Start Time", "End Time")
+
+    # Define column headings
+    tree.column("#0", width=0, stretch=tk.NO)
+    tree.column("Student Email", anchor=tk.W, width=200)
+    tree.column("Faculty", anchor=tk.W, width=100)
+    tree.column("Parking Space", anchor=tk.W, width=100)
+    tree.column("Start Time", anchor=tk.W, width=100)
+    tree.column("End Time", anchor=tk.W, width=100)
+
+    # Define column headings
+    tree.heading("#0", text="NO", anchor=tk.W)
+    tree.heading("Student Email", text="Student Email", anchor=tk.W)
+    tree.heading("Faculty", text="Faculty", anchor=tk.W)
+    tree.heading("Parking Space", text="Parking Space", anchor=tk.W)
+    tree.heading("Start Time", text="Start Time", anchor=tk.W)
+    tree.heading("End Time", text="End Time", anchor=tk.W)
+
+    # Insert data into the treeview
+    for user in users:
+        tree.insert("", "end", values=(user[0], user[1], user[2], user[3], user[4]))
+
+    tree.pack()
+
+
+
     # Function to handle the guard login process
 def guard_login():
     # Create a new top-level window for guard login form
@@ -786,14 +867,14 @@ def guard_login():
     guard_heading.grid(row=0, columnspan=2, pady=20)
 
     # Guard_ID Label and Entry
-    label_guard_id = tk.Label(loginform_frame, text="Guard_ID", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
+    label_guard_id = tk.Label(loginform_frame, text="NO.PK:", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
     label_guard_id.grid(row=1, column=0, padx=10, pady=5)
 
     entry_guard_id = tk.Entry(loginform_frame)
     entry_guard_id.grid(row=1, column=1, padx=10, pady=5)
    
     # Password Label and Entry
-    label_password = tk.Label(loginform_frame, text="Password", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
+    label_password = tk.Label(loginform_frame, text="Password:", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
     label_password.grid(row=2, column=0, padx=10, pady=5)
 
     entry_password = tk.Entry(loginform_frame, show="*")
@@ -802,13 +883,14 @@ def guard_login():
     def toggle_password():
         if entry_password.cget('show')== '':
             entry_password.config(show='*')
-            toggle_button.config(text='show')
+            toggle_button.config(text='Show')
         else:
             entry_password.config(show='')
-            toggle_button.config(text='hide')
+            toggle_button.config(text='Hide')
+            
+    toggle_button = tk.Button(loginform_frame, text='Show', command=toggle_password)
+    toggle_button.grid(row=2, column=2, padx=10, pady=5)
 
-        toggle_button = tk.Button(loginform_frame, text='Show', command=toggle_password)
-        toggle_button.grid(row=2, column=2, padx=10, pady=5)
 
      # Function to handle login submission
     def login():
@@ -833,16 +915,53 @@ def guard_login():
             if user:
                 messagebox.showinfo("Login", "Login Successful!")
                 guard_login_window.destroy()
+                # Call parking_checking function after displaying user information
+                parking_checking()
             else:
                 messagebox.showerror("Error", "Invalid Guard ID or Password")
-        
-    # Submit Button
-    button_submit = tk.Button(guard_login_window, text="LOGIN", command=login)
-    button_submit.pack()
-   
-   # Login Button
+    # Login Button
     button_login = tk.Button(loginform_frame, text="LOGIN", font=("Microsoft YaHei UI Light", 16), fg='black', command=login)
-    button_login.grid(row=3, columnspan=2, pady=10)
+    button_login.grid(row=4, columnspan=2, pady=10)
+    
+    # Forget Password Button
+    button_forget = tk.Button(loginform_frame, text="Forget Password", font=("Microsoft YaHei UI Light", 8, 'bold'), fg='red', command=login)
+    button_forget.grid(row=3, column=1, sticky="e", pady=5, padx=10)
+
+
+# Function to handle the data, fci layout and foe layout
+def parking_checking():
+    # Create a new top-level window for parking checking
+    parking_checking_window = tk.Toplevel(root)
+    parking_checking_window.title("Parking Checking")
+    parking_checking_window.geometry('900x900')
+
+    parking_checking_bg_image = tk.PhotoImage(file=r"/Users/vikassni_1304/Downloads/road-highway.png")
+    parking_checking_window.bg_image = parking_checking_bg_image  # keep a reference to avoid garbage collection
+    parking_checking_bg_label = tk.Label(parking_checking_window, image=parking_checking_bg_image)
+    parking_checking_bg_label.place(relwidth=1, relheight=1)
+
+    # Create a new frame for the buttons
+    button_frame = tk.Frame(parking_checking_window, bg='black', bd=10)
+    button_frame.place(relx=0.5, rely=0.6, anchor='center')  # Adjust the rely parameter to move the frame down
+
+    # Create a button to handle data of users
+    Data_button = tk.Button(parking_checking_window, text="Show Data",  width=20, height=2, font=('Times New Roman', 18), command=display_users_table)
+    Data_button.pack(pady=20)
+
+    # Create a button to handle data of users
+    Reservation_button = tk.Button(parking_checking_window, text="Show Reservation Table",  width=20, height=2, font=('Times New Roman', 18), command=display_reservation_table)
+    Reservation_button.pack(pady=20)
+
+    # Create a button to handle fci layout
+    Show_fci_button = tk.Button(parking_checking_window, text="Show FCI layout",  width=20, height=2, font=('Times New Roman', 18), command=parking_checking)
+    Show_fci_button.pack(pady=20)
+
+    # Create a button to handle fcoe layout
+    Show_foe_button = tk.Button(parking_checking_window, text="Show FOE layout",  width=20, height=2, font=('Times New Roman', 18), command=parking_checking)
+    Show_foe_button.pack(pady=20)
+
+
+
 
 # Buttons for Sign Up, Student, and Guard 
 
