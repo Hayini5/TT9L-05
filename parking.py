@@ -1,14 +1,21 @@
-from curses import BUTTON_CTRL
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 import re
+from datetime import datetime
 
 # Connect to SQLite database
 conn = sqlite3.connect('parking_system.db')
-
 # Create a cursor object
 c = conn.cursor()
+
+#Placeholder for the database connection function
+def get_db_connection():
+    # Implement this function to connect to your database
+    pass
+
+# Placeholder for the logged-in student email
+logged_in_student_email = "student@example.com"
 
 # Create a table for student
 c.execute('''
@@ -39,7 +46,7 @@ c.execute('''
 c.execute('''
     CREATE TABLE IF NOT EXISTS reservation (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_email TEXT UNIQUE NOT NULL, 
+        student_email TEXT NOT NULL, 
         faculty TEXT NOT NULL,
         parking_space TEXT NOT NULL,
         start_time TEXT NOT NULL,
@@ -412,7 +419,7 @@ def student_login():
     student_heading = tk.Label(loginform_frame, text="STUDENT LOGIN", font=("Microsoft YaHei UI Light", 23, 'bold'), fg='black', bg='white')
     student_heading.grid(row=0, columnspan=2, pady=20)
 
-    # Student_ID Label and Entry
+    # Student_email Label and Entry
     label_student_email = tk.Label(loginform_frame, text="Student_Email:", font=("Microsoft YaHei UI Light", 14), fg='black', bg='white')
     label_student_email.grid(row=1, column=0, padx=10, pady=5)
 
@@ -425,7 +432,6 @@ def student_login():
 
     entry_password = tk.Entry(loginform_frame, show="*")
     entry_password.grid(row=2, column=1, padx=10, pady=5)
-
 
     def toggle_password():
         if entry_password.cget('show')== '':
@@ -440,13 +446,10 @@ def student_login():
 
     # Function to handle submission
     def submit():
-        # Make the student login email global when submitted
-        global login_student_email
-
-        login_student_email = entry_student_email.get()
+        student_email = entry_student_email.get()
         password = entry_password.get()
 
-        if not login_student_email or not password:
+        if not student_email or not password:
             messagebox.showwarning("Input Error", "All fields are required.")
             student_window.destroy()
             return student_login()
@@ -476,7 +479,7 @@ def student_login():
     button_submit = tk.Button(loginform_frame, text="LOGIN", font=("Microsoft YaHei UI Light", 16), fg='black', command=submit)
     button_submit.grid(row=4, columnspan=2, pady=10)
 
-# Function to handle the booking, cancelation and extension
+    # Function to handle the booking, cancelation and extension
 def parking_system():
     # Create a new top-level window for parking system
     parking_system_window = tk.Toplevel(root)
@@ -534,8 +537,6 @@ def open_booking_window():
     button_user2 = tk.Button(button_frame, text="FOE", width=20, height=2, font=('Times New Roman', 12), command=foe_layout)
     button_user2.grid(row=0, column=1, padx=6, pady=6)
 
-    # Function to let student choose parking space
-    # Function to let student choose parking space
 def fci_layout():
     # Create a new top-level window for parking space selection
     space_selection_window = tk.Toplevel(root)
@@ -549,18 +550,64 @@ def fci_layout():
     # Dictionary to store button references 
     button_dict ={}
 
-    # Function to handle button clicks
-    def reserve_space(space, button_dict):
-        # Check if the parking space is already reserved
+    # Function to get the end time of the student's current reservation
+    def get_current_end_time():
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT * FROM reservation WHERE faculty='FCI' AND parking_space=?", (space,))
+        c.execute("SELECT end_time FROM reservation WHERE faculty='FCI' AND student_email=?", (logged_in_student_email,))
+        end_time = c.fetchone()
+        conn.close()
+        return end_time[0] if end_time else None
+    
+    def cancellation(space):
+        # Create a new top-level window for cancelling reservation
+        cancel_window = tk.Toplevel(space_selection_window)
+        cancel_window.title('Cancel reservation')
+        cancel_window.geometry('400x200')
+
+        # Define a grid
+        cancel_window.columnconfigure((0,1,2,3,4), weight=1)
+        cancel_window.rowconfigure((0,1,2,3), weight=1)
+
+        # Function to cancel the reservation
+        def cancel():
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute("DELETE FROM reservation WHERE parking_space = ?", (space,))
+            messagebox.showinfo("Success", "Parking reservation is cancelled successfully.")
+            conn.commit()
+            conn.close()
+            cancel_window.destroy() # Close the cancellation window after reservation is cancelled
+
+        label = tk.Label(cancel_window, text="Would you like to cancel reservation?", font=3)
+        label.grid(row=1, column=1, columnspan=3)
+
+        yes_button = tk.Button(cancel_window, text="Yes", bg='light grey', font=2, command=cancel)
+        yes_button.grid(row=2, column=1, sticky='ew')
+
+        no_button = tk.Button(cancel_window, text="No", bg='light grey', font=2, command=lambda: cancel_window.destroy())
+        no_button.grid(row=2, column=3, sticky='ew')
+
+    # Function to handle button clicks
+    def reserve_space(space, button_dict):
+        current_end_time = get_current_end_time()
+        if current_end_time:
+            current_time = datetime.now().strftime('%H:%M')
+            if current_time < current_end_time:
+                messagebox.showerror("Error", "You already have a current reservation. Please wait until it ends.")
+                return
+
+        # Check if the parking space is already reserved by another student
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM reservation WHERE faculty='FCI' AND parking_space=? AND student_email!=?", (space,logged_in_student_email))
         if c.fetchone():
-            messagebox.showerror("Error", "Parking space is already reserved.")
+            messagebox.showerror("Error", "Parking space is already reserved by another student.")
+            button_dict[space].config(state='disabled')
             return
 
         # Create a new window for time selection
-        time_selection_window= tk.Toplevel(space_selection_window)
+        time_selection_window = tk.Toplevel(space_selection_window)
         time_selection_window.title('Select Time')
         time_selection_window.geometry('300x200')
 
@@ -581,10 +628,6 @@ def fci_layout():
         end_time = tk.StringVar(time_selection_window)
         end_time.set(times[0])  # default value
 
-        # Variable to store selected parking space
-        parking_space = tk.StringVar(time_selection_window)
-        parking_space.set(space)
-
         # Create OptionMenu for time selection
         start_time_menu = tk.OptionMenu(time_selection_window, start_time, *times)
         start_time_menu.grid(row=0, column=1, padx=10, pady=10)
@@ -593,7 +636,7 @@ def fci_layout():
         end_time_menu.grid(row=1, column=1, padx=10, pady=10)
 
         # Label to show confirmation message
-        confirmation_label = tk.Label(time_selection_window, text="**Duration of parking cannot exceed 5 hours", bg='yellow', font=("Microsoft YaHei UI Light", 8), fg='black')
+        confirmation_label = tk.Label(time_selection_window, text="**Duration of parking cannot exceed 5 hours", bg='red', font=("Microsoft YaHei UI Light", 8), fg='white')
         confirmation_label.grid(row=2, columnspan=3, padx=10, pady=10)
 
         # Function to check if the selected duration is within the 5-hour limit
@@ -606,9 +649,9 @@ def fci_layout():
                 duration = (24 - start_hour) + end_hour
             return duration <= 5
 
-        # Fuction to confirm reservation with selected time
+        # Function to confirm reservation with selected time
         def confirm_reservation():
-            chosen_parking_space = parking_space.get()
+            chosen_parking_space = space
             chosen_start_time = start_time.get()
             chosen_end_time = end_time.get()
 
@@ -624,6 +667,13 @@ def fci_layout():
 
             # Check if the duration exceeds 5 hours
             if check_duration(chosen_start_time, chosen_end_time):
+                # Check if the student has an existing reservation in FOE with the same time
+                conn = get_db_connection()
+                c = conn.cursor()
+                c.execute("SELECT * FROM reservation WHERE faculty='FOE' AND student_email=? AND start_time=? AND end_time=?", (logged_in_student_email, chosen_start_time, chosen_end_time))
+                if c.fetchone():
+                    messagebox.showerror("Error", "You already have a reservation in FOE with the same time. Please choose a different time.")
+                    return
 
                 # Make a connection with the database
                 conn = get_db_connection()
@@ -631,22 +681,14 @@ def fci_layout():
 
                 # Insert parking into the database
                 try:
-                    c.execute("INSERT INTO reservation (student_email, faculty, parking_space, start_time, end_time) VALUES (?,'FCI',?,?,?)", 
-                                (logged_in_student_email, chosen_parking_space, chosen_start_time, chosen_end_time))
+                    c.execute("INSERT INTO reservation (student_email, faculty, parking_space, start_time, end_time) VALUES (?,?,?,?,?)", 
+                              (logged_in_student_email, 'FCI', chosen_parking_space, chosen_start_time, chosen_end_time))
                     conn.commit()
-                    messagebox.showinfo("Success", f"Parking Space {chosen_parking_space} reserved from {chosen_start_time} to {chosen_end_time}!")
-                    button_dict[chosen_parking_space].config(bg='red', text="Reserved")  # change button colour to red and text to "Reserved"
-                    time_selection_window.destroy()
-
-
-                except Exception as e:
-                    messagebox.showerror("Error", str(e))
-
+                    messagebox.showinfo("Success", "Parking space reserved successfully.")
+                except sqlite3.Error as e:
+                    messagebox.showerror("Error", "Failed to reserve parking space. Error: " + str(e))
                 finally:
-                    conn.close() # Close the connection
-
-            else:
-                messagebox.showerror("Error", "Reservation duration cannot exceed 5 hours.")
+                    conn.close()
 
         # Confirm button
         confirm_button = tk.Button(time_selection_window, text="RESERVED",bg='blue', font=("Microsoft YaHei UI Light", 10), fg='white', command=confirm_reservation)
@@ -655,27 +697,64 @@ def fci_layout():
     # Create buttons for each parking space
     for i in range(1, 51):
         button_text = f"Space {i}"
-        button = tk.Button(layout_frame, text=f"Space {i}", font=("Arial", 10), width=10, height=2,
+        c = get_db_connection().cursor()
+        c.execute(f"SELECT * FROM reservation WHERE faculty='FCI' AND parking_space=?", (i,))
+        # Check if the button is already reserved
+        if c.fetchone():
+            button = tk.Button(layout_frame, text=f"Space {i}\nReserved", font=("Arial", 10), width=10, height=2,bg='red', command=lambda i=i: cancellation(i))
+        else:
+           button = tk.Button(layout_frame, text=f"Space {i}", font=("Arial", 10), width=10, height=2,
                            command=lambda i=i, button_dict=button_dict: reserve_space(i, button_dict))
         row = (i - 1) // 10
         col = (i - 1) % 10
         button.grid(row=row, column=col, padx=5, pady=5)
-        button_dict[i] = button  # Store button reference in dictionary
+        button_dict[i] = button #Store button reference in dictionary
 
-def update_reserved_spaces():
-    # Make a connection with the database
-    conn = get_db_connection()
-    c = conn.cursor()
+    # Function to update button states
+    def update_button_states():
+        
+        current_time = datetime.now().strftime('%H:%M')
+        for space, end_time in reserved_spaces:
+            end_time_dt = datetime.strptime(end_time, '%H:%M').time()
+            current_time_dt = datetime.strptime(current_time, '%H:%M').time()
 
-    # Fetch the reserved parking spaces for the FCI faculty
-    c.execute("SELECT parking_space FROM reservation WHERE faculty='FCI'")
-    reserved_spaces = c.fetchall()
+        if current_time_dt < end_time_dt:
+            button_dict[int(space)].config(bg='yellow', text=f"Space {space}\nReserved", state='normal', command=lambda i=i: cancellation(i))
+        else:
+            button_dict[int(space)].config(state='normal', bg='blue', text=f"Space {space}")
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT parking_space FROM reservation WHERE faculty='FCI'")
+        reserved_spaces = [row[0] for row in c.fetchall()]
+        for space in reserved_spaces:
+            button_dict[int(space)].config(bg='red', text="Reserved")
 
-    # Update the button_dict with the reserved spaces' color
-    for space in reserved_spaces:
-         BUTTON_CTRL[space[0]].config(bg='red', text="Reserved")
+    # Update button states when the window is opened
+    update_button_states()
 
-    conn.close()  # Close the connection
+    # Function to refresh the layout and disable already reserved spaces
+    def refresh_layout():
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT parking_space, end_time FROM reservation WHERE faculty = "FCI"')
+        reserved_spaces = c.fetchall()
+        conn.close()
+
+        current_time = datetime.now().strftime('%H:%M')
+        for space, end_time in reserved_spaces:
+            end_time_dt = datetime.strptime(end_time, '%H:%M').time()
+            current_time_dt = datetime.strptime(current_time, '%H:%M').time()
+
+            if current_time_dt < end_time_dt:
+                button_dict[int(space)].config(state='disabled', bg='yellow', text=f"Space {space}\nReserved")
+            else:
+                button_dict[int(space)].config(state='normal', bg='blue', text=f"Space {space}")
+
+        # Schedule the function to run again after 24 hours (86400000 milliseconds)
+        layout_frame.after(86400000, refresh_layout)
+
+    # Call the refresh_layout function to disable already reserved spaces and keep updating every minute
+    refresh_layout()
     
     # Function to let student choose parking space
     # Function to let student choose parking space
@@ -692,10 +771,64 @@ def foe_layout():
     # Dictionary to store button references 
     button_dict ={}
 
+    # Function to get the end time of the student's current reservation
+    def get_current_end_time():
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT end_time FROM reservation WHERE faculty='FOE' AND student_email=?", (logged_in_student_email,))
+        end_time = c.fetchone()
+        conn.close()
+        return end_time[0] if end_time else None
+    
+    def cancellation(space):
+        # Create a new top-level window for cancelling reservation
+        cancel_window = tk.Toplevel(space_selection_window)
+        cancel_window.title('Cancel reservation')
+        cancel_window.geometry('400x200')
+
+        # Define a grid
+        cancel_window.columnconfigure((0,1,2,3,4), weight=1)
+        cancel_window.rowconfigure((0,1,2,3), weight=1)
+
+        # Function to cancel the reservation
+        def cancel():
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute("DELETE FROM reservation WHERE parking_space = ?", (space,))
+            messagebox.showinfo("Success", "Parking reservation is cancelled successfully.")
+            conn.commit()
+            conn.close()
+            cancel_window.destroy() # Close the cancellation window after reservation is cancelled
+
+        label = tk.Label(cancel_window, text="Would you like to cancel reservation?", font=3)
+        label.grid(row=1, column=1, columnspan=3)
+
+        yes_button = tk.Button(cancel_window, text="Yes", bg='light grey', font=2, command=cancel)
+        yes_button.grid(row=2, column=1, sticky='ew')
+
+        no_button = tk.Button(cancel_window, text="No", bg='light grey', font=2, command=lambda: cancel_window.destroy())
+        no_button.grid(row=2, column=3, sticky='ew')
+
     # Function to handle button clicks
-    def reserve_space(space):
+    def reserve_space(space, button_dict):
+        current_end_time = get_current_end_time()
+        if current_end_time:
+            current_time = datetime.now().strftime('%H:%M')
+            if current_time < current_end_time:
+                messagebox.showerror("Error", "You already have a current reservation. Please wait until it ends.")
+                return
+
+        # Check if the parking space is already reserved by another student
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM reservation WHERE faculty='FOE' AND parking_space=? AND student_email!=?", (space,logged_in_student_email))
+        if c.fetchone():
+            messagebox.showerror("Error", "Parking space is already reserved by another student.")
+            button_dict[space].config(state='disabled')
+            return
+
         # Create a new window for time selection
-        time_selection_window= tk.Toplevel(space_selection_window)
+        time_selection_window = tk.Toplevel(space_selection_window)
         time_selection_window.title('Select Time')
         time_selection_window.geometry('300x200')
 
@@ -716,10 +849,6 @@ def foe_layout():
         end_time = tk.StringVar(time_selection_window)
         end_time.set(times[0])  # default value
 
-        # Variable to store selected parking space
-        parking_space = tk.StringVar(time_selection_window)
-        parking_space.set(space)
-
         # Create OptionMenu for time selection
         start_time_menu = tk.OptionMenu(time_selection_window, start_time, *times)
         start_time_menu.grid(row=0, column=1, padx=10, pady=10)
@@ -728,7 +857,7 @@ def foe_layout():
         end_time_menu.grid(row=1, column=1, padx=10, pady=10)
 
         # Label to show confirmation message
-        confirmation_label = tk.Label(time_selection_window, text="**Duration of parking cannot exceed 5 hours", bg='yellow', font=("Microsoft YaHei UI Light", 8), fg='black')
+        confirmation_label = tk.Label(time_selection_window, text="**Duration of parking cannot exceed 5 hours", bg='red', font=("Microsoft YaHei UI Light", 8), fg='white')
         confirmation_label.grid(row=2, columnspan=3, padx=10, pady=10)
 
         # Function to check if the selected duration is within the 5-hour limit
@@ -741,9 +870,9 @@ def foe_layout():
                 duration = (24 - start_hour) + end_hour
             return duration <= 5
 
-        # Fuction to confirm reservation with selected time
+        # Function to confirm reservation with selected time
         def confirm_reservation():
-            chosen_parking_space = parking_space.get()
+            chosen_parking_space = space
             chosen_start_time = start_time.get()
             chosen_end_time = end_time.get()
 
@@ -759,6 +888,13 @@ def foe_layout():
 
             # Check if the duration exceeds 5 hours
             if check_duration(chosen_start_time, chosen_end_time):
+                # Check if the student has an existing reservation in FCI with the same time
+                conn = get_db_connection()
+                c = conn.cursor()
+                c.execute("SELECT * FROM reservation WHERE faculty='FCI' AND student_email=? AND start_time=? AND end_time=?", (logged_in_student_email, chosen_start_time, chosen_end_time))
+                if c.fetchone():
+                    messagebox.showerror("Error", "You already have a reservation in FCI with the same time. Please choose a different time.")
+                    return
 
                 # Make a connection with the database
                 conn = get_db_connection()
@@ -766,21 +902,14 @@ def foe_layout():
 
                 # Insert parking into the database
                 try:
-                    c.execute("INSERT INTO reservation (student_email, faculty, parking_space, start_time, end_time) VALUES (?,'FOE', ?, ?, ?)", 
-                                (logged_in_student_email, chosen_parking_space, chosen_start_time, chosen_end_time))
+                    c.execute("INSERT INTO reservation (student_email, faculty, parking_space, start_time, end_time) VALUES (?,?,?,?,?)", 
+                              (logged_in_student_email, 'FOE', chosen_parking_space, chosen_start_time, chosen_end_time))
                     conn.commit()
-                    messagebox.showinfo("Parking Space", f"Parking Space {chosen_parking_space} reserved successfully from {chosen_start_time} to {chosen_end_time}!")
-                    button_dict[space].config(bg='red') #change button colour to red
-                    time_selection_window.destroy()
-
-                except Exception as e:
-                    messagebox.showerror("Error", str(e))
-
+                    messagebox.showinfo("Success", "Parking space reserved successfully.")
+                except sqlite3.Error as e:
+                    messagebox.showerror("Error", "Failed to reserve parking space. Error: " + str(e))
                 finally:
-                    conn.close() # Close the connection
-
-            else:
-                messagebox.showerror("Error", "Reservation duration cannot exceed 5 hours.")
+                    conn.close()
 
         # Confirm button
         confirm_button = tk.Button(time_selection_window, text="RESERVED",bg='green', font=("Microsoft YaHei UI Light", 10), fg='white', command=confirm_reservation)
@@ -789,29 +918,77 @@ def foe_layout():
     # Create buttons for each parking space
     for i in range(1, 51):
         button_text = f"Space {i}"
-        button = tk.Button(layout_frame, text=f"Space {i}", font=("Arial", 10), width=10, height=2,
-                           command=lambda i=i: reserve_space(i))
+        c = get_db_connection().cursor()
+        c.execute(f"SELECT * FROM reservation WHERE faculty='FOE' AND parking_space=?", (i,))
+        # Check if the button is already reserved
+        if c.fetchone():
+            button = tk.Button(layout_frame, text=f"Space {i}\nReserved", font=("Arial", 10), width=10, height=2,bg='red', command=lambda i=i: cancellation(i))
+        else:
+           button = tk.Button(layout_frame, text=f"Space {i}", font=("Arial", 10), width=10, height=2,
+                           command=lambda i=i, button_dict=button_dict: reserve_space(i, button_dict))
         row = (i - 1) // 10
         col = (i - 1) % 10
         button.grid(row=row, column=col, padx=5, pady=5)
         button_dict[i] = button #Store button reference in dictionary
 
-    # Function to display the users table
+    # Function to update button states
+    def update_button_states():
+        
+        current_time = datetime.now().strftime('%H:%M')
+        for space, end_time in reserved_spaces:
+            end_time_dt = datetime.strptime(end_time, '%H:%M').time()
+            current_time_dt = datetime.strptime(current_time, '%H:%M').time()
+
+        if current_time_dt < end_time_dt:
+            button_dict[int(space)].config(bg='yellow', text=f"Space {space}\nReserved", command=lambda i=i: cancellation(i))
+        else:
+            button_dict[int(space)].config(state='normal', bg='blue', text=f"Space {space}")
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT parking_space FROM reservation WHERE faculty='FOE'")
+        reserved_spaces = [row[0] for row in c.fetchall()]
+        for space in reserved_spaces:
+            button_dict[int(space)].config(bg='red', text="Reserved")
+
+    # Update button states when the window is opened
+    update_button_states()
+
+    # Function to refresh the layout and disable already reserved spaces
+    def refresh_layout():
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT parking_space, end_time FROM reservation WHERE faculty = "FOE"')
+        reserved_spaces = c.fetchall()
+        conn.close()
+
+        current_time = datetime.now().strftime('%H:%M')
+        for space, end_time in reserved_spaces:
+            end_time_dt = datetime.strptime(end_time, '%H:%M').time()
+            current_time_dt = datetime.strptime(current_time, '%H:%M').time()
+
+            if current_time_dt < end_time_dt:
+                button_dict[int(space)].config(state='disabled', bg='yellow', text=f"Space {space}\nReserved")
+            else:
+                button_dict[int(space)].config(state='normal', bg='green', text=f"Space {space}")
+
+        # Schedule the function to run again after 24 hours (86400000 milliseconds)
+        layout_frame.after(86400000, refresh_layout)
+
+    # Call the refresh_layout function to disable already reserved spaces and keep updating every minute
+    refresh_layout()
+    
+
 def display_reservation_table():
     # Connect to the SQLite database
     conn = sqlite3.connect('parking_system.db')
-    c = conn.cursor() 
-   
-    # Fetch all rows from the reservation table
-    c.execute('SELECT * FROM reservation')
-    users = c.fetchall()
-
+    c = conn.cursor()
 
     # Fetch all rows from the reservation table
     c.execute('SELECT student_email, faculty, parking_space, start_time, end_time FROM reservation')
     users = c.fetchall()
 
-    # Close the connection
+    # Close the cursor and the connection
+    c.close()
     conn.close()
 
     # Create a new top-level window for displaying the reservation table
@@ -844,8 +1021,6 @@ def display_reservation_table():
         tree.insert("", "end", values=(user[0], user[1], user[2], user[3], user[4]))
 
     tree.pack()
-
-
 
     # Function to handle the guard login process
 def guard_login():
@@ -935,7 +1110,7 @@ def parking_checking():
     parking_checking_window.title("Parking Checking")
     parking_checking_window.geometry('900x900')
 
-    parking_checking_bg_image = tk.PhotoImage(file=r"/Users/vikassni_1304/Downloads/road-highway.png")
+    parking_checking_bg_image = tk.PhotoImage(file=r"/Users/Dell/Downloads/road-highway.png")
     parking_checking_window.bg_image = parking_checking_bg_image  # keep a reference to avoid garbage collection
     parking_checking_bg_label = tk.Label(parking_checking_window, image=parking_checking_bg_image)
     parking_checking_bg_label.place(relwidth=1, relheight=1)
@@ -960,9 +1135,6 @@ def parking_checking():
     Show_foe_button = tk.Button(parking_checking_window, text="Show FOE layout",  width=20, height=2, font=('Times New Roman', 18), command=parking_checking)
     Show_foe_button.pack(pady=20)
 
-
-
-
 # Buttons for Sign Up, Student, and Guard 
 
 button_sign_up = tk.Button(root, text="SIGN UP", **button_info, command=button_sign_up)
@@ -973,12 +1145,6 @@ button_student.pack(pady=20)
 
 button_guard = tk.Button(root, text="GUARD", command=guard_login, **button_info)
 button_guard.pack(pady=20)
-
-conn = get_db_connection()
-c = conn.cursor()
-c.execute("SELECT * FROM reservation")
-result = c.fetchall()
-print(result)
 
 # Main loop to run the Tkinter application
 root.mainloop()
