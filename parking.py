@@ -722,8 +722,7 @@ def fci_layout():
     close_button = tk.Button(layout_frame, text="Close", font=("Arial", 12), width=10, height=2, command=space_selection_window.destroy)
     close_button.grid(row=5, columnspan=10, pady=10)
 
-fci_button = tk.Button(root, text="FCI", bg='green', font=("Microsoft YaHei UI Light", 12), fg='white', command=fci_layout)
-fci_button.pack(pady=20)
+
 
 
 def foe_layout():
