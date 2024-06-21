@@ -1289,5 +1289,8 @@ button_student.pack(pady=20)
 button_guard = tk.Button(root, text="GUARD", command=guard_login, **button_info)
 button_guard.pack(pady=20)
 
+button_guide = tk.Button(root, text="GUIDE BUTTON", command=button_sign_up, **button_info)
+button_guide.pack(pady=20)
+
 # Main loop to run the Tkinter application
 root.mainloop()
