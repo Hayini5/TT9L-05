@@ -105,7 +105,7 @@ bg_label.place(x=0, y=0, relwidth=1, relheight=1)  # stretch the label to fill t
 
 
 # Welcome message
-welcome_message = tk.Label(root, text="Welcome to Parking Reservation System of MMU!", font=("Algerian", 36), fg='green', bg=root.cget('bg'))
+welcome_message = tk.Label(root, text="Welcome to Parking Reservation System of MMU!", font=("Times New Roman", 40), fg='dark blue', bg='white')
 welcome_message.pack(pady=40)
 
 # Button styles
@@ -787,22 +787,22 @@ def fci_layout():
 
     # Function to update button states
     def update_button_states():
-        
         current_time = datetime.now().strftime('%H:%M')
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT parking_space, end_time FROM reservation WHERE faculty='FCI'")
+        reserved_spaces = c.fetchall()
+        conn.close()
+
         for space, end_time in reserved_spaces:
             end_time_dt = datetime.strptime(end_time, '%H:%M').time()
             current_time_dt = datetime.strptime(current_time, '%H:%M').time()
 
-        if current_time_dt < end_time_dt:
-            button_dict[int(space)].config(bg='yellow', text=f"Space {space}\nReserved", state='normal', command=lambda i=i: cancellation(i))
-        else:
-            button_dict[int(space)].config(state='normal', bg='blue', text=f"Space {space}")
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute("SELECT parking_space FROM reservation WHERE faculty='FCI'")
-        reserved_spaces = [row[0] for row in c.fetchall()]
-        for space in reserved_spaces:
-            button_dict[int(space)].config(bg='red', text="Reserved")
+            if current_time_dt < end_time_dt:
+                button_dict[int(space)].config(bg='yellow', text=f"Space {space}\nReserved", state='normal', command=lambda i=int(space): cancellation(i))
+            else:
+                button_dict[int(space)].config(state='normal', bg='blue', text=f"Space {space}")
+
 
     # Update button states when the window is opened
     update_button_states()
@@ -825,8 +825,8 @@ def fci_layout():
             else:
                 button_dict[int(space)].config(state='normal', bg='blue', text=f"Space {space}")
 
-        # Schedule the function to run again after 24 hours (86400000 milliseconds)
-        layout_frame.after(86400000, refresh_layout)
+        # Schedule the function to run again after 1 minute (60000 milliseconds)
+        layout_frame.after(60000, refresh_layout)
 
     # Call the refresh_layout function to disable already reserved spaces and keep updating every minute
     refresh_layout()
@@ -1283,6 +1283,9 @@ button_student.pack(pady=20)
 
 button_guard = tk.Button(root, text="GUARD", command=guard_login, **button_info)
 button_guard.pack(pady=20)
+
+button_information = tk.Button(root, text="INSTRUCTION", **button_info, command=button_sign_up)
+button_information.pack(pady=20)
 
 # Main loop to run the Tkinter application
 root.mainloop()
