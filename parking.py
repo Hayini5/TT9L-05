@@ -105,7 +105,7 @@ bg_label.place(x=0, y=0, relwidth=1, relheight=1)  # stretch the label to fill t
 
 
 # Welcome message
-welcome_message = tk.Label(root, text="Welcome to Parking Reservation System of MMU!", font=("Times New Roman", 40), fg='dark blue', bg='white')
+welcome_message = tk.Label(root, text="Welcome to Parking Reservation System of MMU!", font=("Algerian", 36), fg='Dark blue', bg='white')
 welcome_message.pack(pady=40)
 
 # Button styles
@@ -787,22 +787,22 @@ def fci_layout():
 
     # Function to update button states
     def update_button_states():
+        
         current_time = datetime.now().strftime('%H:%M')
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute("SELECT parking_space, end_time FROM reservation WHERE faculty='FCI'")
-        reserved_spaces = c.fetchall()
-        conn.close()
-
         for space, end_time in reserved_spaces:
             end_time_dt = datetime.strptime(end_time, '%H:%M').time()
             current_time_dt = datetime.strptime(current_time, '%H:%M').time()
 
-            if current_time_dt < end_time_dt:
-                button_dict[int(space)].config(bg='yellow', text=f"Space {space}\nReserved", state='normal', command=lambda i=int(space): cancellation(i))
-            else:
-                button_dict[int(space)].config(state='normal', bg='blue', text=f"Space {space}")
-
+        if current_time_dt < end_time_dt:
+            button_dict[int(space)].config(bg='yellow', text=f"Space {space}\nReserved", state='normal', command=lambda i=i: cancellation(i))
+        else:
+            button_dict[int(space)].config(state='normal', bg='blue', text=f"Space {space}")
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT parking_space FROM reservation WHERE faculty='FCI'")
+        reserved_spaces = [row[0] for row in c.fetchall()]
+        for space in reserved_spaces:
+            button_dict[int(space)].config(bg='red', text="Reserved")
 
     # Update button states when the window is opened
     update_button_states()
@@ -825,8 +825,8 @@ def fci_layout():
             else:
                 button_dict[int(space)].config(state='normal', bg='blue', text=f"Space {space}")
 
-        # Schedule the function to run again after 1 minute (60000 milliseconds)
-        layout_frame.after(60000, refresh_layout)
+        # Schedule the function to run again after 24 hours (86400000 milliseconds)
+        layout_frame.after(86400000, refresh_layout)
 
     # Call the refresh_layout function to disable already reserved spaces and keep updating every minute
     refresh_layout()
@@ -1284,8 +1284,68 @@ button_student.pack(pady=20)
 button_guard = tk.Button(root, text="GUARD", command=guard_login, **button_info)
 button_guard.pack(pady=20)
 
-button_information = tk.Button(root, text="INSTRUCTION", **button_info, command=button_sign_up)
-button_information.pack(pady=20)
+def guide():
+        # Create a new top-level window for parking checking
+        guide_window = tk.Toplevel(root)
+        guide_window.title("Instruction for students and guards")
+        guide_window.geometry('900x900')
+
+        image_folder = os.path.join(os.path.dirname(__file__), 'images')
+        guide_window_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 2.png'))
+        guide_window.bg_image = guide_window_bg_image
+        guide_window_bg_label = tk.Label(guide_window, image=guide_window_bg_image)
+        guide_window_bg_label.place(relwidth=1, relheight=1)
+
+        
+        guideselection_frame = tk.Frame(guide_window, bg='white', bd=10)
+        guideselection_frame.place(relx=0.5, rely=0.4, anchor='center')  # Adjust the rely parameter to move the frame up
+
+        # Label and Entry
+        label = tk.Label(guideselection_frame, text="ARE YOU A STUDENT OR A GUARD ?", fg='black', bg='white', font=("Times New Roman", 16))
+        label.grid(row=0, column=0, padx=10, pady=5)
+
+        # Create a new frame for the buttons
+        button_frame = tk.Frame(guide_window, bg='black', bd=10)
+        button_frame.place(relx=0.5, rely=0.6, anchor='center')  # Adjust the rely parameter to move the frame down
+
+        # Example buttons for different users
+        button_user1 = tk.Button(button_frame, text="STUDENT", font=("Times New Roman", 18), command=student_guide)
+        button_user1.grid(row=0, column=0, padx=10, pady=10)
+
+        button_user2 = tk.Button(button_frame, text="GUARD", font=("Times New Roman", 18), command=guard_guide)
+        button_user2.grid(row=0, column=1, padx=10, pady=10)
+
+
+def student_guide():
+    # Create a new top-level window for parking checking
+        guide_window = tk.Toplevel(root)
+        guide_window.title("Instruction for students")
+        guide_window.geometry('900x900')
+
+        image_folder = os.path.join(os.path.dirname(__file__), 'images')
+        guide_window_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 3.png'))
+        guide_window.bg_image = guide_window_bg_image
+        guide_window_bg_label = tk.Label(guide_window, image=guide_window_bg_image)
+        guide_window_bg_label.place(relwidth=1, relheight=1)
+
+def guard_guide():
+    # Create a new top-level window for parking checking
+        guide_window = tk.Toplevel(root)
+        guide_window.title("Instruction for guards")
+        guide_window.geometry('900x900')
+
+        image_folder = os.path.join(os.path.dirname(__file__), 'images')
+        guide_window_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 4.png'))
+        guide_window.bg_image = guide_window_bg_image
+        guide_window_bg_label = tk.Label(guide_window, image=guide_window_bg_image)
+        guide_window_bg_label.place(relwidth=1, relheight=1)
+
+
+button_guide = tk.Button(root, text="INSTRUCTION", command=guide, **button_info)
+button_guide.pack(pady=20)
+
+
+
 
 # Main loop to run the Tkinter application
 root.mainloop()
