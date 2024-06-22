@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import sqlite3
 import re
 from datetime import datetime
+import os
 
 # Connect to SQLite database
 conn = sqlite3.connect('parking_system.db')
@@ -55,10 +56,10 @@ c.execute('''
     )
 ''')
 
-# Add the student_email column to the reservation table
+# Add the phone number column to the user table
 try:
-    c.execute('ALTER TABLE reservation ADD COLUMN student_email TEXT UNIQUE NOT NULL')
-    print("Column 'student_email' added successfully.")
+    c.execute('ALTER TABLE USER ADD COLUMN phone number TEXT UNIQUE NOT NULL')
+    print("Column 'Phone number' added successfully.")
 except sqlite3.OperationalError as e:
     print("Error:", e)
 
@@ -96,13 +97,17 @@ root = tk.Tk()
 root.title('LOGIN')
 root.geometry('900x900')
 
-# Load the image
-bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\road-highway.png")
+image_folder = os.path.join(os.path.dirname(__file__), 'images')
+image_path = os.path.join(image_folder, 'IMAGE 1.png')
+
+bg_image = tk.PhotoImage(file=image_path)
 root.bg_image = bg_image  # keep a reference to avoid garbage collection
 
-# Background label
+# Create a Label widget to display the background image
 bg_label = tk.Label(root, image=bg_image)
-bg_label.place(relwidth=1, relheight=1)
+bg_label.place(x=0, y=0, relwidth=1, relheight=1)  # stretch the label to fill the entire window
+
+
 
 # Welcome message
 welcome_message = tk.Label(root, text="Welcome to Parking Reservation System of MMU!", font=("Algerian", 36), fg='green', bg=root.cget('bg'))
@@ -124,7 +129,8 @@ def button_sign_up():
     signup_window.title("SIGN UP SELECTION")
     signup_window.geometry('900x900')
 
-    signup_bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\WhatsApp-Image-2024-06-05-at-2.07.03-AM.png")
+    image_folder = os.path.join(os.path.dirname(__file__), 'images')    
+    signup_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 2.png'))
     signup_window.bg_image = signup_bg_image
     signup_bg_label = tk.Label(signup_window, image=signup_bg_image)
     signup_bg_label.place(relwidth=1, relheight=1)
@@ -153,7 +159,8 @@ def student_sign_up():
     signup_window.title("SIGN UP FORM")
     signup_window.geometry('900x900')
 
-    signup_bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\WhatsApp-Image-2024-06-05-at-2.07.03-AM.png")
+    image_folder = os.path.join(os.path.dirname(__file__), 'images')   
+    signup_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 2.png'))
     signup_window.bg_image = signup_bg_image
     signup_bg_label = tk.Label(signup_window, image=signup_bg_image)
     signup_bg_label.place(relwidth=1, relheight=1)
@@ -288,7 +295,7 @@ def display_users_table():
 
     # Create a treeview widget to display the users table
     tree = ttk.Treeview(display_window)
-    tree["columns"] = ("Name", "Phone Number", "Email", "Vehicle Type", "Vehicle Number", "Gender")
+    tree["columns"] = ("Name", "Phone Number", "Email",  "Vehicle Type", "Vehicle Number", "Gender")
 
     # Define column headings
     tree.column("#0", width=0, stretch=tk.NO)
@@ -320,10 +327,12 @@ def guard_sign_up():
     signup_window.title("SIGN UP FORM")
     signup_window.geometry('900x900')
 
-    signup_bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\WhatsApp-Image-2024-06-05-at-2.07.03-AM.png")
+    image_folder = os.path.join(os.path.dirname(__file__), 'images')    
+    signup_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 2.png'))
     signup_window.bg_image = signup_bg_image
     signup_bg_label = tk.Label(signup_window, image=signup_bg_image)
     signup_bg_label.place(relwidth=1, relheight=1)
+
 
     signupform_frame = tk.Frame(signup_window, bg='black', bd=10)
     signupform_frame.place(relx=0.5, rely=0.5, anchor='center')
@@ -465,10 +474,13 @@ def student_login():
     student_window.title('STUDENT LOGIN FORM')
     student_window.geometry('900x900')
 
-    student_bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\WhatsApp-Image-2024-06-05-at-2.07.03-AM.png")
-    student_window.bg_image = student_bg_image  # keep a reference to avoid garbage collection
+    image_folder = os.path.join(os.path.dirname(__file__), 'images')    
+    student_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 2.png'))
+    student_window.bg_image = student_bg_image
     student_bg_label = tk.Label(student_window, image=student_bg_image)
     student_bg_label.place(relwidth=1, relheight=1)
+
+
 
     # Create a frame to hold the login form
     loginform_frame = tk.Frame(student_window, bg='white', bd=10)
@@ -541,10 +553,11 @@ def parking_system():
     parking_system_window.title("Parking Confirmation")
     parking_system_window.geometry('900x900')
 
-    parking_system_bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\road-highway.png")
-    parking_system_window.bg_image = parking_system_bg_image  # keep a reference to avoid garbage collection
-    parking_system_bg_label = tk.Label(parking_system_window, image=parking_system_bg_image)
-    parking_system_bg_label.place(relwidth=1, relheight=1)
+    image_folder = os.path.join(os.path.dirname(__file__), 'images')
+    parking_system_window_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 1.png'))
+    parking_system_window.bg_image = parking_system_window_bg_image
+    parking_system_window_bg_label = tk.Label(parking_system_window, image=parking_system_window_bg_image)
+    parking_system_window_bg_label.place(relwidth=1, relheight=1)
 
     # Create a new frame for the buttons
     button_frame = tk.Frame(parking_system_window, bg='black', bd=10)
@@ -561,7 +574,7 @@ def open_booking_window():
     book_window.title("BOOKING")
     book_window.geometry('900x900')
 
-    book_bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\road-highway.png")
+    book_bg_image = tk.PhotoImage(file=r"images/IMAGE 1.png")
     book_window.bg_image = book_bg_image  # keep a reference to avoid garbage collection
     book_bg_label = tk.Label(book_window, image=book_bg_image)
     book_bg_label.place(relwidth=1, relheight=1)
@@ -1108,10 +1121,12 @@ def guard_login():
     guard_login_window.title("GUARD LOGIN")
     guard_login_window.geometry('900x900')
 
-    guard_bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\WhatsApp-Image-2024-06-05-at-2.07.03-AM.png")
-    guard_login_window.bg_image = guard_bg_image  # keep a reference to avoid garbage collection
-    guard_bg_label = tk.Label(guard_login_window, image=guard_bg_image)
-    guard_bg_label.place(relwidth=1, relheight=1)
+    image_folder = os.path.join(os.path.dirname(__file__), 'images')    
+    guard_login_window_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 2.png'))
+    guard_login_window.bg_image = guard_login_window_bg_image
+    guard_login_window_bg_label = tk.Label(guard_login_window, image=guard_login_window_bg_image)
+    guard_login_window_bg_label.place(relwidth=1, relheight=1)
+
 
     loginform_frame = tk.Frame(guard_login_window, bg='white', bd=10)
     loginform_frame.place(relx=0.5, rely=0.5, anchor='center')
@@ -1185,10 +1200,11 @@ def parking_checking():
     parking_checking_window.title("Parking Checking")
     parking_checking_window.geometry('900x900')
 
-    parking_checking_bg_image = tk.PhotoImage(file=r"C:\Users\KARTHIGHAYINI\Downloads\road-highway.png")
-    parking_checking_window.bg_image = parking_checking_bg_image  # keep a reference to avoid garbage collection
-    parking_checking_bg_label = tk.Label(parking_checking_window, image=parking_checking_bg_image)
-    parking_checking_bg_label.place(relwidth=1, relheight=1)
+    image_folder = os.path.join(os.path.dirname(__file__), 'images')    
+    parking_checking_window_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 2.png'))
+    parking_checking_window.bg_image = parking_checking_window_bg_image
+    parking_checking_window_bg_label = tk.Label(parking_checking_window, image=parking_checking_window_bg_image)
+    parking_checking_window_bg_label.place(relwidth=1, relheight=1)
 
     # Create a new frame for the buttons
     button_frame = tk.Frame(parking_checking_window, bg='black', bd=10)
@@ -1198,17 +1214,26 @@ def parking_checking():
     Data_button = tk.Button(parking_checking_window, text="Sign Up Information of Students",  width=30, height=2, font=('Times New Roman', 18), command=display_users_table)
     Data_button.pack(pady=20)
 
+    
+
+
     # Create a button to handle data of users
     Reservation_button = tk.Button(parking_checking_window, text="Reservation Information",  width=25, height=2, font=('Times New Roman', 18), command=display_reservation_table)
     Reservation_button.pack(pady=20)
+ 
+    
 
     # Create a button to handle fci layout
     Show_fci_button = tk.Button(parking_checking_window, text="FCI Parking Layout",  width=20, height=2, font=('Times New Roman', 18), command=fci_layout)
     Show_fci_button.pack(pady=20)
 
+    
+
     # Create a button to handle fcoe layout
     Show_foe_button = tk.Button(parking_checking_window, text="FOE Parking Layout",  width=20, height=2, font=('Times New Roman', 18), command=foe_layout)
     Show_foe_button.pack(pady=20)
+
+    
 
 # Buttons for Sign Up, Student, and Guard 
 
@@ -1220,6 +1245,90 @@ button_student.pack(pady=20)
 
 button_guard = tk.Button(root, text="GUARD", command=guard_login, **button_info)
 button_guard.pack(pady=20)
+
+
+guide_window = None
+student_guide_window = None
+signup_window = None
+
+def guide():
+    global guide_window
+    guide_window = tk.Toplevel(root)
+    guide_window.title("Instruction for students and guards")
+    guide_window.geometry('900x900')
+
+    image_folder = os.path.join(os.path.dirname(__file__), 'images')
+    guide_window_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 2.png'))
+    guide_window.bg_image = guide_window_bg_image
+    guide_window_bg_label = tk.Label(guide_window, image=guide_window_bg_image)
+    guide_window_bg_label.place(relwidth=1, relheight=1)
+
+    guideselection_frame = tk.Frame(guide_window, bg='white', bd=10)
+    guideselection_frame.place(relx=0.5, rely=0.4, anchor='center')  
+
+    label = tk.Label(guideselection_frame, text="ARE YOU A STUDENT OR A GUARD ?", fg='black', bg='white', font=("Times New Roman", 16))
+    label.grid(row=0, column=0, padx=10, pady=5)
+
+    button_frame = tk.Frame(guide_window, bg='black', bd=10)
+    button_frame.place(relx=0.5, rely=0.6, anchor='center')  
+
+    button_user1 = tk.Button(button_frame, text="STUDENT", font=("Times New Roman", 18), command=student_guide)
+    button_user1.grid(row=0, column=0, padx=10, pady=10)
+
+    button_user2 = tk.Button(button_frame, text="GUARD", font=("Times New Roman", 18), command=guard_guide)
+    button_user2.grid(row=0, column=1, padx=10, pady=10)
+
+
+    def go_back():
+        guide_window.destroy()  # Destroy the guide selection frame
+        signup_window.deiconify()  # Show the signup window again
+
+    back_button = tk.Button(guide_window, text="Back", command=go_back)
+    back_button.pack(side=tk.BOTTOM)
+    
+def student_guide():
+    global guide_window, student_guide_window
+    guide_window.withdraw()  # Hide the guide window
+    student_guide_window = tk.Toplevel(root)
+    student_guide_window.title("Instruction for students")
+    student_guide_window.geometry('900x900')
+
+    image_folder = os.path.join(os.path.dirname(__file__), 'images')
+    student_guide_window_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 3.png'))
+    student_guide_window.bg_image = student_guide_window_bg_image
+    student_guide_window_bg_label = tk.Label(student_guide_window, image=student_guide_window_bg_image)
+    student_guide_window_bg_label.place(relwidth=1, relheight=1)
+
+    def go_back():
+        student_guide_window.destroy()  # Destroy the student_guide_window
+        guide_window.deiconify()  # Show the guide window again
+
+    back_button = tk.Button(student_guide_window, text="Back", command=go_back)
+    back_button.pack(side=tk.BOTTOM)
+
+
+def guard_guide():
+    global guide_window, guard_guide_window
+    guide_window.withdraw()  # Hide the guide window
+    guard_guide_window = tk.Toplevel(root)
+    guard_guide_window.title("Instruction for guards")
+    guard_guide_window.geometry('900x900')
+
+    image_folder = os.path.join(os.path.dirname(__file__), 'images')
+    guard_guide_window_bg_image = tk.PhotoImage(file=os.path.join(image_folder, 'IMAGE 4.png'))
+    guard_guide_window.bg_image = guard_guide_window_bg_image
+    guard_guide_window_bg_label = tk.Label(guard_guide_window, image=guard_guide_window_bg_image)
+    guard_guide_window_bg_label.place(relwidth=1, relheight=1)
+
+    def go_back():
+        guard_guide_window.destroy()  # Destroy the guard_guide_window
+        guide_window.deiconify()  # Show the guide window again
+
+    back_button = tk.Button(guard_guide_window, text="Back", command=go_back)
+    back_button.pack(side=tk.BOTTOM)
+
+button_guide = tk.Button(root, text="INSTRUCTION", command=guide, **button_info)
+button_guide.pack(pady=20)
 
 # Main loop to run the Tkinter application
 root.mainloop()
