@@ -4,6 +4,7 @@ import sqlite3
 import re
 from datetime import datetime
 import os
+from datetime import datetime, timedelta
 
 # Connect to SQLite database
 conn = sqlite3.connect('parking_system.db')
@@ -295,29 +296,29 @@ def display_users_table():
 
     # Create a treeview widget to display the users table
     tree = ttk.Treeview(display_window)
-    tree["columns"] = ("Name", "Phone Number", "Email",  "Vehicle Type", "Vehicle Number", "Gender")
+    tree["columns"] = ("Name", "Phone Number", "Email",  "Vehicle Number", "Vehicle Type")
 
     # Define column headings
     tree.column("#0", width=0, stretch=tk.NO)
     tree.column("Name", anchor=tk.W, width=100)
     tree.column("Phone Number", anchor=tk.W, width=100)
     tree.column("Email", anchor=tk.W, width=200)
-    tree.column("Vehicle Type", anchor=tk.W, width=100)
     tree.column("Vehicle Number", anchor=tk.W, width=100)
-    tree.column("Gender", anchor=tk.W, width=100)
+    tree.column("Vehicle Type", anchor=tk.W, width=100)
+    
 
     # Define column headings
     tree.heading("#0", text="NO", anchor=tk.W)
     tree.heading("Name", text="Name", anchor=tk.W)
     tree.heading("Phone Number", text="Phone Number", anchor=tk.W)
     tree.heading("Email", text="Email", anchor=tk.W)
-    tree.heading("Vehicle Type", text="Vehicle Type", anchor=tk.W)
     tree.heading("Vehicle Number", text="Vehicle Number", anchor=tk.W)
-    tree.heading("Gender", text="Gender", anchor=tk.W)
+    tree.heading("Vehicle Type", text="Vehicle Type", anchor=tk.W)
+    
 
     # Insert data into the treeview
     for user in users:
-        tree.insert("", "end", values=(user[1], user[2], user[3], user[4], user[5], user[6]))
+        tree.insert("", "end", values=(user[1], user[2], user[3], user[4], user[5]))
 
     tree.pack()
 
@@ -629,13 +630,13 @@ def fci_layout():
 
         if reservation_data[1] == logged_in_student_email:
             # Create a new top-level window for cancelling reservation
-            cancel_window = tk.Toplevel(space_selection_window)
-            cancel_window.title('Cancel reservation')
-            cancel_window.geometry('400x200')
+            action_window = tk.Toplevel(space_selection_window)
+            action_window.title('Cancel or Extend reservation')
+            action_window.geometry('400x200')
 
             # Define a grid
-            cancel_window.columnconfigure((0,1,2,3,4), weight=1)
-            cancel_window.rowconfigure((0,1,2,3), weight=1)
+            action_window.columnconfigure((0,1,2,3,4), weight=1)
+            action_window.rowconfigure((0,1,2,3), weight=1)
 
             # Function to cancel the reservation
             def cancel():
@@ -645,21 +646,55 @@ def fci_layout():
                 messagebox.showinfo("Success", "Parking reservation is cancelled successfully.")
                 conn.commit()
                 conn.close()
-                cancel_window.destroy() # Close the cancellation window after reservation is cancelled
+                action_window.destroy() # Close the cancellation window after reservation is cancelled
 
-            label = tk.Label(cancel_window, text="Would you like to cancel reservation?", font=3)
+            # Function to extend the reservation
+            def extend():
+                extend_window = tk.Toplevel(action_window)
+                extend_window.title('Extend Reservation')
+                extend_window.geometry('400x200')
+
+                label = tk.Label(extend_window, text="Choose extension duration")
+                label.pack()
+
+                def update_end_time(minutes):
+                    current_end_time = datetime.strptime(get_current_end_time(), "%H:%M")
+                    new_end_time = current_end_time + timedelta(minutes=minutes)
+                    conn = get_db_connection()
+                    c = conn.cursor()
+                    c.execute("UPDATE reservation SET end_time = ? WHERE parking_space = ?", (new_end_time.strftime("%H:%M"), space))
+                    conn.commit()
+                    conn.close()
+                  
+                    messagebox.showinfo("Success", "Parking reservation is extended successfully.")
+                    extend_window.destroy()
+                    action_window.destroy()
+
+                
+                                        
+                    
+                button_1_hour = tk.Button(extend_window, text="1 Hour", command=lambda: update_end_time(60))
+                button_1_hour.pack(pady=10)
+                button_30_minutes = tk.Button(extend_window, text="30 Minutes", command=lambda: update_end_time(30))
+                button_30_minutes.pack(pady=10)
+
+            label = tk.Label(action_window, text="Would you like to cancel or extend your reservation?", font=("Arial", 12))
             label.grid(row=1, column=1, columnspan=3)
 
-            yes_button = tk.Button(cancel_window, text="Yes", bg='light grey', font=2, command=cancel)
-            yes_button.grid(row=2, column=1, sticky='ew')
+            cancel_button = tk.Button(action_window, text="Cancel", bg='light grey', font=("Arial", 10), command=cancel)
+            cancel_button.grid(row=2, column=1, sticky='ew')
 
-            no_button = tk.Button(cancel_window, text="No", bg='light grey', font=2, command=lambda: cancel_window.destroy())
-            no_button.grid(row=2, column=3, sticky='ew')
+            extend_button = tk.Button(action_window, text="Extend", bg='light grey', font=("Arial", 10), command=extend)
+            extend_button.grid(row=2, column=3, sticky='ew')
+
+        
 
         else:
             messagebox.showerror("Error", "Parking space is already reserved by another student.")
             button_dict[space].config(state='disabled')
             return
+        
+            
 
     # Function to handle button clicks
     def reserve_space(space, button_dict):
@@ -831,9 +866,9 @@ def fci_layout():
 
     # Call the refresh_layout function to disable already reserved spaces and keep updating every minute
     refresh_layout()
+
     
 # Function to let student choose parking space
-    # Function to let student choose parking space
 def foe_layout():
     # Create a new top-level window for parking space selection
     space_selection_window = tk.Toplevel(root)
@@ -866,13 +901,13 @@ def foe_layout():
 
         if reservation_data[1] == logged_in_student_email:
             # Create a new top-level window for cancelling reservation
-            cancel_window = tk.Toplevel(space_selection_window)
-            cancel_window.title('Cancel reservation')
-            cancel_window.geometry('400x200')
+            action_window = tk.Toplevel(space_selection_window)
+            action_window.title('Cancel reservation')
+            action_window.geometry('400x200')
 
             # Define a grid
-            cancel_window.columnconfigure((0,1,2,3,4), weight=1)
-            cancel_window.rowconfigure((0,1,2,3), weight=1)
+            action_window.columnconfigure((0,1,2,3,4), weight=1)
+            action_window.rowconfigure((0,1,2,3), weight=1)
 
             # Function to cancel the reservation
             def cancel():
@@ -882,21 +917,46 @@ def foe_layout():
                 messagebox.showinfo("Success", "Parking reservation is cancelled successfully.")
                 conn.commit()
                 conn.close()
-                cancel_window.destroy() # Close the cancellation window after reservation is cancelled
+                action_window.destroy() # Close the cancellation window after reservation is cancelled
 
-            label = tk.Label(cancel_window, text="Would you like to cancel reservation?", font=3)
+            # Function to extend the reservation
+            def extend():
+                extend_window = tk.Toplevel(action_window)
+                extend_window.title('Extend Reservation')
+                extend_window.geometry('400x200')
+
+                label = tk.Label(extend_window, text="Choose extension duration")
+                label.pack()
+
+                def update_end_time(minutes):
+                    current_end_time = datetime.strptime(get_current_end_time(), "%H:%M")
+                    new_end_time = current_end_time + timedelta(minutes=minutes)
+                    conn = get_db_connection()
+                    c = conn.cursor()
+                    c.execute("UPDATE reservation SET end_time = ? WHERE parking_space = ?", (new_end_time.strftime("%H:%M"), space))
+                    conn.commit()
+                    conn.close()
+                    messagebox.showinfo("Success", "Parking reservation is extended successfully.")
+                    extend_window.destroy()
+                    action_window.destroy()
+
+                button_1_hour = tk.Button(extend_window, text="1 Hour", command=lambda: update_end_time(60))
+                button_1_hour.pack(pady=10)
+                button_30_minutes = tk.Button(extend_window, text="30 Minutes", command=lambda: update_end_time(30))
+                button_30_minutes.pack(pady=10)
+
+            label = tk.Label(action_window, text="Would you like to cancel or extend your reservation?", font=("Arial", 12))
             label.grid(row=1, column=1, columnspan=3)
 
-            yes_button = tk.Button(cancel_window, text="Yes", bg='light grey', font=2, command=cancel)
-            yes_button.grid(row=2, column=1, sticky='ew')
+            cancel_button = tk.Button(action_window, text="Cancel", bg='light grey', font=("Arial", 10), command=cancel)
+            cancel_button.grid(row=2, column=1, sticky='ew')
 
-            no_button = tk.Button(cancel_window, text="No", bg='light grey', font=2, command=lambda: cancel_window.destroy())
-            no_button.grid(row=2, column=3, sticky='ew')
+            extend_button = tk.Button(action_window, text="Extend", bg='light grey', font=("Arial", 10), command=extend)
+            extend_button.grid(row=2, column=3, sticky='ew')
 
         else:
             messagebox.showerror("Error", "Parking space is already reserved by another student.")
             button_dict[space].config(state='disabled')
-            return
 
     # Function to handle button clicks
     def reserve_space(space, button_dict):
